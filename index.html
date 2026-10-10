@@ -1258,6 +1258,10 @@ const ROOMRECT = {};
 for(let y=0;y<MAP.H;y++) for(let x=0;x<MAP.W;x++){ const r=MAP.grid[y][x]; const R=ROOMRECT[r]||(ROOMRECT[r]={x0:x,y0:y,x1:x,y1:y}); R.x0=Math.min(R.x0,x); R.y0=Math.min(R.y0,y); R.x1=Math.max(R.x1,x); R.y1=Math.max(R.y1,y); }
 const passable = (x,y) => roomAt(x,y)!==null && !BLOCK.has(key(x,y));
 const canStep = (ax,ay,bx,by) => passable(bx,by) && (roomAt(ax,ay)===roomAt(bx,by) || DOORS.has(key(ax,ay)+'|'+key(bx,by)));
+// cells the player can actually walk to from the start (items only spawn here)
+const REACH = (()=>{ const seen=new Set([key(...MAP.start)]), st=[MAP.start.slice()];
+  while(st.length){ const [x,y]=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{ const nx=x+dx, ny=y+dy, k=key(nx,ny); if(!seen.has(k) && canStep(x,y,nx,ny)){ seen.add(k); st.push([nx,ny]); } }); }
+  return seen; })();
 const WALLSEG = (()=>{ const out=[], tI=.12;
   for(let y=0;y<MAP.H;y++) for(let x=0;x<MAP.W;x++){
     if(x<MAP.W-1 && roomAt(x,y)!==roomAt(x+1,y) && !DOORS.has(key(x,y)+'|'+key(x+1,y))) out.push({u:x+1-tI/2,v:y,w:tI,h:1,kind:'in',key:x+y+1.5});
@@ -1273,7 +1277,7 @@ function scatter(){
   const dd=DIFF[diffKey];
   const boxes = MAP.furn.filter(f=>f.box).map(f=>({f, items:[], searched:false, openT:0, room:roomAt(f.x,f.y)}));
   const used = new Set([key(...MAP.start)]);
-  const cellsIn = r => { const out=[]; const R=ROOMRECT[r]; for(let y=R.y0;y<=R.y1;y++) for(let x=R.x0;x<=R.x1;x++){ const k=key(x,y); if(passable(x,y)&&!STAIR.has(k)&&!DOORCELL.has(k)&&!used.has(k)) out.push([x,y]); } return out; };
+  const cellsIn = r => { const out=[]; const R=ROOMRECT[r]; for(let y=R.y0;y<=R.y1;y++) for(let x=R.x0;x<=R.x1;x++){ const k=key(x,y); if(REACH.has(k)&&!STAIR.has(k)&&!DOORCELL.has(k)&&!used.has(k)) out.push([x,y]); } return out; };
   const floor=[]; let uid=0;
   const living = id => DEF[id].k==='person'||DEF[id].k==='cat';
   let set = ITEM_SET.concat(dd.add); dd.cut.forEach(id=>{ const i=set.indexOf(id); if(i>=0) set.splice(i,1); });
