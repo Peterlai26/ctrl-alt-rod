@@ -127,7 +127,8 @@ h1,h2,h3{margin:0;text-wrap:balance} p{margin:0}
 .howto canvas{width:40px;height:40px}
 .gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .gal div{padding:8px;text-align:center;font-family:var(--f-ui);font-weight:600;font-size:12.5px}
-.gal div i{display:block;height:40px;margin-bottom:6px;background:var(--navy)}
+.gal div i{display:block;aspect-ratio:16/10;margin-bottom:6px;background:var(--navy)}
+.gal canvas{display:block;width:100%;aspect-ratio:16/10;margin-bottom:6px;border:2px solid var(--ink)}
 .gal div.no i{background:repeating-linear-gradient(45deg,#9a9a9a 0 5px,#b4b4b4 5px 10px)}
 .gal div.no{color:var(--g-lo)}
 .chk{display:flex;align-items:center;gap:8px;font-size:14px;border:0;background:transparent;padding:2px 0;text-align:left}
@@ -247,6 +248,7 @@ h1,h2,h3{margin:0;text-wrap:balance} p{margin:0}
 .sleep{margin:4px 0;padding-left:18px;font-size:14px;line-height:1.7}
 .wizfoot{display:flex;align-items:center;gap:8px;padding:6px 8px 8px;border-top:1px solid var(--g-lo);box-shadow:inset 0 1px var(--white)}
 .wizfoot .why{flex:1;min-width:0;font-size:12px;color:var(--ink-soft);line-height:1.25}
+.wizfoot .given{display:inline-flex;align-items:center;flex-wrap:wrap;gap:1px} .wizfoot .given canvas{width:16px;height:16px}
 
 /* ending */
 .end{display:grid;place-items:center;min-height:100%}
@@ -324,7 +326,7 @@ h1,h2,h3{margin:0;text-wrap:balance} p{margin:0}
   <section id="scr-intro" class="scr" style="padding:0"></section>
   <section id="scr-scv" class="scr" hidden>
     <div class="scv win">
-      <div class="tb"><span class="t">เดสก์ท็อป — กำลังติดไวรัส</span><button class="b95 tbx" data-act="mute" id="mutebtn" aria-label="เปิดปิดเสียง">♪</button></div>
+      <div class="tb"><span class="t">เดสก์ท็อป — กำลังติดไวรัส</span><button class="b95 tbx" data-act="vib" id="vibbtn" aria-label="เปิดปิดการสั่น" hidden></button><button class="b95 tbx" data-act="mute" id="mutebtn" aria-label="เปิดปิดเสียง">♪</button></div>
       <div class="mapbox" id="mapbox">
         <canvas id="mapc" aria-label="เดสก์ท็อปที่กำลังติดไวรัส"></canvas>
         <div class="miniwin win"><div class="tb">แผนที่</div><canvas id="mini" aria-hidden="true"></canvas></div>
@@ -683,8 +685,8 @@ const DIFF = {
   normal:{n:'ปานกลาง', recede:22, thirst:6, hunger:10, sickDie:5, exp:0, luck:1, bad:1, add:[], cut:[], spread:1},
   hard:{n:'ยาก', recede:26, thirst:5, hunger:8, sickDie:4, exp:-.12, luck:.7, bad:1.7, add:[], cut:['mama','mama','water','bottle','fishcan'], spread:1.25}
 };
-const BAD_EV = new Set(['snake','thief','mosq','foot','wire','heat','smell','window','croc1','radioBroken','tonMama','fridge','knock']);
-const GOOD_EV = new Set(['relief','merit','drone','headman','catfish','megaphone']);
+const BAD_EV = new Set(['bsod','miner','lag','formatScare','snake','thief','mosq','foot','wire','heat','smell','window','croc1','radioBroken','tonMama','fridge','knock']);
+const GOOD_EV = new Set(['timewarp','emoji','catBig','relief','merit','drone','headman','catfish','megaphone']);
 const FURN_STYLE = {
   bed:{h:.45,c:'#e2574c'}, wardrobe:{h:1.2,c:'#c79a55'}, desk:{h:.7,c:'#d9a441'}, bunk:{h:.9,c:'#3b3f4a'}, tub:{h:.75,c:'#9aa7b0'},
   medcab:{h:1.0,c:'#e7c84a'}, counter:{h:.9,c:'#4a5568'}, cupboard:{h:.8,c:'#b07a4a'}, fridge:{h:1.45,c:'#8fb3c9'}, table:{h:.25,c:'#d8d4c8'},
@@ -702,6 +704,7 @@ const ENDINGS = {
   aunt:{t:'ย้ายไปอยู่คลาวด์', win:1},
   viral:{t:'ติดอันดับหนึ่งแอพสโตร์', win:1},
   boat:{t:'หนีไปเครื่องใหม่', win:1},
+  merge:{t:'รวมร่างเป็นซูเปอร์แอพ', win:1},
   dead:{t:'ฟอร์แมตทั้งเครื่อง', win:0}
 };
 const FILLER = [
@@ -716,6 +719,15 @@ const FILLER = [
   n=>`${n}ใช้เวลาทั้งบ่ายเรียงไฟล์ตามวันที่แก้ไขล่าสุด`,
   ()=>'วอลเปเปอร์ข้างนอกเปลี่ยนเป็นสีเขียวอีกหนึ่งแถบ'
 ];
+const FORMS = {
+  bit8:{n:'ร่าง 8 บิต'}, zip:{n:'ถูกบีบอัด'}, ghost:{n:'ไฟล์ซ่อน'}, giant:{n:'ไอคอนยักษ์'},
+  flip:{n:'กลับหัว'}, swap:{n:'สลับร่าง'}, alien:{n:'ร่างเอเลี่ยน'}
+};
+const FORM_LINES = {
+  bit8:['บี๊บ บู๊บ','ตอนนี้ 8 บิตเต็มตัว','ไม่หิวแรมเลย'], zip:['อึดอัดนิดหน่อย','ประหยัดที่ 80%','ใครช่วยรูดซิปที'], ghost:['บู้ว','เห็นฉันไหม','ตัวเบาจัง'],
+  giant:['เพดานต่ำไปไหม','ระวังเหยียบนะ','วิวดีมาก'], flip:['เลือดขึ้นหัว','ข้างบนวิวดีนะ','ลงไม่ได้'], swap:['นี่ไม่ใช่หน้าฉัน','ใครยืมหน้าไป','คืนหน้ามา'],
+  alien:['ได้ยินเสียงจากดาวอื่น','ฉันมาอย่างสันติ','ปี๊บ ปี๊บ']
+};
 const LINES = {
   ok:{ek:['เดี๋ยวจัดระเบียบให้','ใจเย็น ๆ นะทุกคน','ไวรัสต้องหายสักวัน'], nid:['มีใครทักมาไหม','ป้าคิดเลขเป็นไงบ้างนะ','แบ่งแรมกันนะ'], praew:['ไม่มีเน็ตเลย','อยากถ่ายรูปข้างนอก','อัลบั้มจะเป็นไงบ้าง'], ton:['ขอออกไปเล่นได้ไหม','หนอนมีจริงไหม','ไม่ต้องอัปเดตเย่']},
   hungry:['แรมไม่พอ...','ค้าง ๆ ๆ','ขอแรมหน่อย'], thirsty:['แบตจะหมด','ขอชาร์จหน่อย','จอจะดับแล้ว'], sick:['ไฟล์เสียหมดแล้ว','ระบบรวน','ขอนอนก่อน'], stress:['ไม่ตอบสนอง','โหลดไม่จบสักที','เมื่อไหร่จะจบ']
@@ -954,7 +966,174 @@ const EVENTS = [
    {l:'ใช้สาย LAN ถักปิด', ok:()=>S.tools.rope, need:'ไม่มีสาย LAN', run:()=>'ปิดได้แน่นหนา แถมดักไฟจากรอยรั่วได้'+fx(0,1)},
    {l:'ปล่อยไว้', run:(ev)=>{ if(ev.n){ sick(ev.n); return `ไวรัสซึมเข้ามาทั้งคืน ${nm(ev.n)}ติดเชื้อ`; } return 'ไดรฟ์มีจุดเขียวขึ้นครึ่งมุม'; }}
   ]},
- {id:'drone', once:1, cond:()=>S.day>=7, auto:()=>{ let t='บอทส่งของของอาสาบินมาหย่อนแพ็กเล็ก ๆ ไว้หน้าพอร์ต'+fx(0,2); if(S.tools.med<1){ S.tools.med=1; t+=' มีแอนตี้ไวรัสแนบมาด้วย'; } return t; }}
+ {id:'drone', once:1, cond:()=>S.day>=7, auto:()=>{ let t='บอทส่งของของอาสาบินมาหย่อนแพ็กเล็ก ๆ ไว้หน้าพอร์ต'+fx(0,2); if(S.tools.med<1){ S.tools.med=1; t+=' มีแอนตี้ไวรัสแนบมาด้วย'; } return t; }},
+ /* ---------- กลายร่าง ---------- */
+ {id:'morph8', once:1, cond:()=>S.day>=2 && here().length>0,
+  text:(ev)=>`ไดรเวอร์จอถูกอัปเดตผิดเวอร์ชัน ทุกอย่างในไดรฟ์เริ่มแตกเป็นพิกเซล ตัวของ${nm(ev.n)}เริ่มเป็นเหลี่ยม ๆ`,
+  ch:[
+   {l:'ปล่อยให้กลายร่าง', run:(ev)=>{ morph(ev.n,'bit8',3); return `${nm(ev.n)}กลายเป็นร่าง 8 บิตเต็มตัว พูดได้แค่ "บี๊บ" แต่บอกว่าไม่หิวแรมเลยสักนิด`; }},
+   {l:'ถอยไดรเวอร์กลับ', ok:()=>S.water>=1, need:'ไม่มีแบต', run:()=>'ถอยไดรเวอร์กลับได้ ภาพกลับมาคมชัดเหมือนเดิม'+fx(0,-1)},
+   {l:'ตบจอแรง ๆ', run:(ev)=>{ if(Math.random()<.5){ morph(ev.n,'bit8',3); return `ตบไปสามที ภาพไม่ดีขึ้น ${nm(ev.n)}กลายเป็นร่าง 8 บิตไปแล้ว`; } stress(ev.n); return `ภาพกลับมาปกติ แต่${nm(ev.n)}ตกใจเสียงตบจนไม่ตอบสนอง`; }}
+  ]},
+ {id:'zipper', once:1, cond:()=>S.day>=3 && here().length>0,
+  text:(ev)=>`โปรแกรมบีบอัดไฟล์หลงเข้ามา เดินถามทุกคนว่าอยากตัวเล็กลงไหม ประหยัดที่ได้ 80% แล้วมันก็มาหยุดตรงหน้า${nm(ev.n)}`,
+  ch:[
+   {l:`ยอมให้บีบอัด`, run:(ev)=>{ morph(ev.n,'zip',3); return `${nm(ev.n)}ตัวแบนเหลือครึ่งเดียว มีซิปพาดกลางตัว ไม่ต้องใช้แรมหรือแบตเลยจนกว่าจะแตกไฟล์ออกมา`; }},
+   {l:'ไม่เอา ขอบคุณ', run:()=> Math.random()<.5 ? 'โปรแกรมบีบอัดเลยบีบอัดแรมไปหนึ่งแท่งแทน แล้วหายไปพร้อมกับมัน'+fx(-1) : 'โปรแกรมบีบอัดเดินจากไป บ่นว่าไม่มีใครเข้าใจศิลปะการบีบอัด'}
+  ]},
+ {id:'ghost', once:1, cond:()=>S.day>=4 && here().length>0,
+  text:(ev)=>`ตีสาม ${nm(ev.n)}ถูกตั้งค่าเป็น "ไฟล์ซ่อน" โดยไม่มีใครกด ทุกคนมองทะลุตัวได้`,
+  ch:[
+   {l:'ปล่อยไว้ เท่ดี', run:(ev)=>{ morph(ev.n,'ghost',3); return `${nm(ev.n)}ลอยไปลอยมาทั้งไดรฟ์ บอกว่าตัวโปร่งแบบนี้ไม่ต้องชาร์จแบตเลย`; }},
+   {l:'สแกนด้วยแอนตี้ไวรัส', ok:()=>S.tools.med>0, need:'ไม่มีแอนตี้ไวรัส', run:(ev)=>{ S.tools.med--; return `สแกนแล้ว${nm(ev.n)}กลับมามองเห็นได้ แต่บ่นว่าเสียดาย`; }},
+   {l:'ตะโกนเรียกชื่อดัง ๆ', run:(ev)=>{ if(Math.random()<.5) return `${nm(ev.n)}ตกใจจนตัวกลับมาทึบเหมือนเดิม`; morph(ev.n,'ghost',3); stress(ev.n); return `${nm(ev.n)}ตกใจจนตัวยิ่งจางกว่าเดิม แล้วไปนั่งซึมอยู่มุมไดรฟ์`; }}
+  ]},
+ {id:'giant', once:1, cond:()=>S.day>=3 && here().length>0,
+  text:(ev)=>`มีใครข้างนอกกด Ctrl ค้างแล้วหมุนลูกกลิ้งเมาส์ ไอคอนของ${nm(ev.n)}ขยายใหญ่ขึ้นเรื่อย ๆ`,
+  ch:[
+   {l:'ปล่อยให้ใหญ่ไปเลย', run:(ev)=>{ morph(ev.n,'giant',3); return `${nm(ev.n)}ตัวใหญ่จนหัวชนเพดาน มัลแวร์แถวนี้เห็นแล้วไม่กล้าเข้าใกล้ไดรฟ์`; }},
+   {l:'กด Ctrl + 0 กลับ', run:(ev)=>`${nm(ev.n)}หดกลับขนาดปกติ แต่ยังเดินชนของไปอีกครึ่งวัน`}
+  ]},
+ {id:'flip', once:1, cond:()=>S.day>=2 && here().length>0,
+  auto:(ev)=>{ morph(ev.n,'flip',2); return `มีคนข้างนอกกด Ctrl+Alt+ลูกศรลง จอหมุนกลับหัว ${nm(ev.n)}ติดอยู่บนเพดานไม่ยอมลงมา`; }},
+ {id:'swapBody', once:1, cond:()=>S.day>=3 && here().length>=2,
+  auto:(ev)=>{ const o=pick(here().filter(id=>id!==ev.n)); morph(ev.n,'swap',2); morph(o,'swap',2); S.m[ev.n].look=o; S.m[o].look=ev.n;
+    return `รีสตาร์ทเมื่อคืนทำให้ไอคอนของ${nm(ev.n)}กับ${nm(o)}<b>สลับกัน</b> ทั้งคู่เดินชนกระจกแล้วกรี๊ดใส่ตัวเองทั้งเช้า`; }},
+ {id:'ufo', once:1, cond:()=>S.day>=4 && here().length>0,
+  text:(ev)=>`จานบินพิกเซลลอยมาจอดหน้าพอร์ต ฉายแสงสีเขียวลงมาตรงหัว${nm(ev.n)}พอดี`,
+  ch:[
+   {l:'ยอมให้แสงดูดขึ้นไป', run:(ev)=>{ morph(ev.n,'alien',4); return `${nm(ev.n)}ลอยขึ้นไปสามนาที กลับลงมาพร้อมหนวดเสาอากาศสองเส้น บอกว่าได้ยินเสียงจากดาวอื่น`; }},
+   {l:'ส่งปิงใส่จานบิน', ok:()=>S.tools.flash, need:'ไม่มีตัวส่งปิง', run:()=>'จานบินตกใจ บินหนีไป ทิ้งกล่องเสบียงอวกาศไว้หน้าพอร์ต'+fx(2,2)},
+   {l:'หลบใต้แท่นชาร์จ', run:()=>'แสงสีเขียวส่องหาอยู่ครึ่งคืน แล้วจานบินก็บินจากไปเงียบ ๆ'}
+  ]},
+ /* ---------- รวมร่าง (ฉากจบลับ) ---------- */
+ {id:'fuse1', once:1, w:.8, cond:()=>S.day>=5 && here().length>=3,
+  text:()=>'มีไฟล์ชื่อ <b>รวมร่าง.exe</b> ติดอยู่บนเพดานไดรฟ์ คำอธิบายเขียนว่า "รวมแอพหลายตัวเป็นซูเปอร์แอพ ไวรัสทำอะไรไม่ได้"',
+  ch:[
+   {l:'เก็บไว้ก่อน', run:()=>{ sched(rand(2,3),'ev:fuse2'); return 'ไฟล์รวมร่าง.exe ส่งเสียงฮัมเบา ๆ ทั้งคืน เหมือนรออะไรอยู่'; }},
+   {l:'ลบทิ้ง', run:()=>{ if(Math.random()<.5){ sched(3,'ev:fuse2'); return 'ลบแล้ว แต่ตอนเช้ามันกลับมาติดอยู่ที่เดิม'; } return 'ลบทิ้งได้สำเร็จ ถังขยะเรอออกมาหนึ่งที'; }}
+  ]},
+ {id:'fuse2', forced:1,
+  text:()=>'รวมร่าง.exe เด้งหน้าต่างขึ้นมาเอง "พร้อมรวมร่างแล้ว ต้องใช้แบต 3 ก้อน ทุกคนต้องจับมือกัน"',
+  ch:[
+   {l:'รวมร่าง!', ok:()=>S.water>=3 && here().length>=2, need:'แบตไม่พอหรือแอพไม่ครบ', run:()=>{ fx(0,-3); S.over='merge'; return 'ทุกคนจับมือกัน แสงขาวสว่างวาบไปทั้งไดรฟ์...'; }},
+   {l:'ยังไม่พร้อม', run:()=>{ S.flags.fuse=(S.flags.fuse||0)+1; if(S.flags.fuse<2){ sched(3,'ev:fuse2'); return 'หน้าต่างพิมพ์ว่า "งั้นอีกสามวันจะถามใหม่"'; } return 'รวมร่าง.exe ถอนหายใจเป็นข้อความ แล้วลบตัวเองทิ้ง'; }}
+  ]},
+ /* ---------- แปลก ๆ ---------- */
+ {id:'dino', once:1, cond:()=>S.day>=2,
+  text:()=>'ไดโนเสาร์จากหน้าเน็ตหลุดวิ่งหลงเข้ามาในไดรฟ์ กระโดดข้ามกระบองเพชรที่มองไม่เห็นไปมา',
+  ch:[
+   {l:'ชวนเล่นด้วย', run:()=>{ if(has('ton') || Math.random()<.5){ unstress('all'); return has('ton')?'เกมเล่นกับมันจนได้ 9,999 คะแนน ทั้งไดรฟ์เชียร์กันเสียงดัง':'วิ่งเล่นกันจนเหนื่อย ทุกคนอารมณ์ดีขึ้นมาก'; } return 'มันวิ่งเร็วเกินไป ไม่มีใครตามทันสักคน'; }},
+   {l:'ให้แรม 1 แท่ง', ok:()=>S.food>=1, need:'ไม่มีแรม', run:()=>{ sched(3,'ev:dino2'); return 'มันงับแรมไปแล้ววิ่งออกไปทางพอร์ต หันกลับมามองหนึ่งที'+fx(-1); }},
+   {l:'ทำเป็นออฟไลน์', run:()=>'มันชอบตอนออฟไลน์ที่สุด เลยนอนหน้าพอร์ตทั้งคืน กรนเป็นเสียง 8 บิต'}
+  ]},
+ {id:'dino2', forced:1, auto:()=>'ไดโนเสาร์ตัวเดิมกลับมา คายกระบองเพชรพิกเซลออกมาสามอัน พอแตะดูกลายเป็นแบต'+fx(0,3)},
+ {id:'clippy', once:1, cond:()=>S.day>=2,
+  text:()=>'ผู้ช่วยคลิปหนีบกระดาษเด้งขึ้นมา "ดูเหมือนคุณกำลังพยายามเอาชีวิตรอด ต้องการความช่วยเหลือไหม?"',
+  ch:[
+   {l:'ต้องการ', run:(ev)=>{ if(Math.random()<.5) return 'คลิปหนีบชี้ไปที่มุมไดรฟ์ ซึ่งมีของที่ทุกคนลืมไว้'+fx(1,1); stress(ev.n); return `คลิปหนีบพูดไม่หยุดทั้งคืน ${nm(ev.n)}ฟังจนไม่ตอบสนอง`; }},
+   {l:'ไม่ต้อง อย่าแสดงอีก', run:()=>'คลิปหนีบน้อยใจ กระโดดลงถังขยะไปเงียบ ๆ'}
+  ]},
+ {id:'bsod', once:1, cond:()=>S.day>=3,
+  text:()=>'จอฟ้า! ข้อความสีขาวขึ้นเต็มผนังไดรฟ์ "เกิดข้อผิดพลาดร้ายแรง" ทุกคนแข็งค้าง',
+  ch:[
+   {l:'กดปุ่มอะไรก็ได้', run:(ev)=>{ if(Math.random()<.6) return 'กดไปหนึ่งที ทุกอย่างกลับมาเหมือนไม่มีอะไรเกิดขึ้น'; stress(ev.n); return `กดแล้วจอฟ้ายิ่งฟ้ากว่าเดิม ${nm(ev.n)}ค้างอยู่ท่าเดิมทั้งวัน`; }},
+   {l:'รอให้มันหายเอง', run:()=>'ค้างไปทั้งคืน แบตหมดไปกับการรอเปล่า ๆ'+fx(0,-1)},
+   {l:'ให้โฟลเดอร์กด Ctrl+Alt+Del', ok:()=>has('ek'), need:'โฟลเดอร์ไม่อยู่', run:()=>'โฟลเดอร์กดสามปุ่มศักดิ์สิทธิ์ ทุกอย่างกลับมาปกติ ทุกคนปรบมือให้'}
+  ]},
+ {id:'recycle', once:1, cond:()=>S.day>=3,
+  text:()=>'ถังขยะจัดปาร์ตี้ ไฟล์ที่ถูกลบทั้งหลายมาเต้นรำกันหน้าพอร์ต แล้วชวนไปร่วมด้วย',
+  ch:[
+   {l:'ไปร่วมสนุก', run:(ev)=>{ if(Math.random()<.55) return 'ได้ของที่คนข้างนอกเผลอลบทิ้งกลับมาเพียบ'+fx(2,1); stress(ev.n); return `${nm(ev.n)}เกือบถูกเทถังขยะไปพร้อมไฟล์อื่น ยังขวัญเสียไม่หาย`; }},
+   {l:'ไม่ไป', run:()=>'เพลงดิสโก้ดังทั้งคืน แต่ก็เพราะดี'}
+  ]},
+ {id:'mirror', once:1, cond:()=>S.day>=3 && here().length>0,
+  text:(ev)=>`มีไฟล์ชื่อ "${nm(ev.n)} (1)" โผล่มาข้าง ๆ หน้าตาเหมือนกันทุกอย่าง แต่ยิ้มแปลก ๆ`,
+  ch:[
+   {l:'เก็บสำเนาไว้', run:(ev)=>{ S.flags.mirror=ev.n; sched(2,'ev:mirror2'); return 'สำเนานั่งยิ้มอยู่มุมไดรฟ์ทั้งคืน ไม่พูดอะไรเลย'; }},
+   {l:'ลบสำเนาทิ้ง', run:()=>'สำเนาโบกมือลา แล้วสลายเป็นแรมหนึ่งแท่ง'+fx(1)}
+  ]},
+ {id:'mirror2', forced:1,
+  text:()=>`สำเนาของ${nm(S.flags.mirror)||'ใครสักคน'}ประกาศว่า จริง ๆ แล้วตัวเองต่างหากที่เป็นตัวจริง`,
+  ch:[
+   {l:'ให้ทั้งคู่ตอบคำถามพิสูจน์', run:()=>'ตัวจริงจำรหัส Wi-Fi ได้ สำเนาหายวับไป ทิ้งแบตไว้สองก้อน'+fx(0,2)},
+   {l:'เชื่อสำเนา', run:()=>{ const id=S.flags.mirror; if(id && S.m[id] && has(id)){ morph(id,'flip',3); stress(id); } return `ตัวจริงงอนจนตีลังกากลับหัว แล้วสำเนาก็ค่อย ๆ จางหายไปเอง`; }}
+  ]},
+ {id:'miner', once:1, cond:()=>S.day>=4,
+  text:()=>'โปรแกรมขุดเหรียญแอบมาตั้งแท่นที่มุมไดรฟ์ พัดลมหมุนติ้ว กินไฟหนักมาก',
+  ch:[
+   {l:'ไล่ด้วยไฟร์วอลล์', ok:()=>S.tools.paddle, need:'ไม่มีไฟร์วอลล์', run:()=>'มันเก็บแท่นขุดหนีไปทันที'},
+   {l:'ปล่อยให้ขุดต่อ', run:()=> Math.random()<.3 ? 'ขุดได้หนึ่งเหรียญพอดี เอาไปแลกแรมได้สามแท่ง'+fx(3,-1) : 'ขุดทั้งคืนได้ศูนย์เหรียญ แบตหายไปสองก้อน'+fx(0,-2)},
+   {l:'ถอดปลั๊กมัน', run:()=>'มันงอน เก็บของออกไปพร้อมเสียงพัดลมที่ค่อย ๆ เงียบลง'}
+  ]},
+ {id:'update', once:1, cond:()=>S.day>=3,
+  text:()=>'หน้าต่างขึ้นมาว่า "ต้องรีสตาร์ทเพื่ออัปเดต" พร้อมนับถอยหลัง 10... 9... 8...',
+  ch:[
+   {l:'เลื่อนออกไปก่อน', run:()=>{ sched(2,'ev:update2'); return 'กดเลื่อนได้ แต่หน้าต่างกระซิบว่า "เดี๋ยวมาใหม่"'; }},
+   {l:'อัปเดตเลย', run:()=>{ if(Math.random()<.5){ unstress('all'); return 'อัปเดตเสร็จไว ทุกคนได้ไอคอนใหม่เงาวับ'; } return 'กำลังอัปเดต 1 จาก 347 ทั้งคืน แบตหายไปหนึ่งก้อน'+fx(0,-1); }}
+  ]},
+ {id:'update2', forced:1, auto:(ev)=>{ if(ev.n) stress(ev.n); return `อัปเดตบังคับรีสตาร์ทตอนตีสาม${ev.n?` ${nm(ev.n)}ตื่นมาพร้อมปุ่มที่ย้ายที่ทั้งหมด หงุดหงิดทั้งวัน`:''}`; }},
+ {id:'slime', once:1, cond:()=>S.day>=3,
+  text:()=>'ไวรัสตัวจิ๋วกลิ้งเข้ามาในไดรฟ์ ตาโต ๆ ไม่มีพิษภัย ทำท่าขอเป็นเพื่อน',
+  ch:[
+   {l:'รับเลี้ยงไว้', run:()=>{ S.flags.slime=1; sched(3,'ev:slime2'); return 'ทุกคนตั้งชื่อให้ว่า "ปุ๊กปิ๊ก" มันนอนหลับบนตู้แร็คอย่างมีความสุข'; }},
+   {l:'ไล่ออกไป', run:(ev)=>{ const k=ev.k||ev.n; if(k) stress(k); return `ปุ๊กปิ๊กร้องไห้เป็นพิกเซลสีเขียว${k?` ${nm(k)}รู้สึกผิดทั้งวัน`:''}`; }},
+   {l:'สแกนทิ้ง', ok:()=>S.tools.med>0, need:'ไม่มีแอนตี้ไวรัส', run:()=>{ S.tools.med--; return 'สแกนแล้วมันหายไปแบบไม่ทิ้งร่องรอย'; }}
+  ]},
+ {id:'slime2', forced:1,
+  text:()=>'ปุ๊กปิ๊กโตขึ้นเท่าตัว แล้วเริ่มเปลี่ยนสีเป็นสีทองอร่าม',
+  ch:[
+   {l:'เลี้ยงต่อ', run:(ev)=>{ if(Math.random()<.55){ S.tools.med+=2; return 'ปุ๊กปิ๊กลอกคราบ กลายร่างเป็นแอนตี้ไวรัสสีทอง!'+chips([chip('med',2)]); } if(ev.n) sick(ev.n); return `ปุ๊กปิ๊กจามใส่${ev.n?nm(ev.n):'ทุกคน'}เต็ม ๆ แล้วกลิ้งหนีออกไป`; }},
+   {l:'ปล่อยกลับบ้าน', run:()=>'ปุ๊กปิ๊กโบกมือลา ทิ้งแรมไว้ให้หนึ่งแท่งเป็นที่ระลึก'+fx(1)}
+  ]},
+ {id:'egg', once:1, cond:()=>S.day>=3,
+  text:()=>'มีไข่พิกเซลวางอยู่บนแท่นชาร์จ อุ่น ๆ และกะพริบเป็นจังหวะ',
+  ch:[
+   {l:'ผลัดกันกกไข่', ok:()=>S.water>=1, need:'ต้องใช้แบตให้ความอุ่น', run:()=>{ sched(3,'ev:egg2'); return 'ทุกคนผลัดกันกกไข่ทั้งคืน ไข่ขยับตอบนิดหนึ่ง'+fx(0,-1); }},
+   {l:'วางคืนไว้หน้าพอร์ต', run:()=>'ตอนเช้าไข่หายไป เหลือแต่รอยเท้าเล็ก ๆ'}
+  ]},
+ {id:'egg2', forced:1, auto:(ev)=>{ const r=Math.random();
+   if(r<.4){ unstress('all'); return 'ไข่ฟักแล้ว! ออกมาเป็นลูกไดโนเสาร์ตัวจิ๋ว ทุกคนหลงรักจนลืมความเครียด'; }
+   if(r<.75) return 'ไข่ฟักออกมาเป็นแรมแผงใหญ่ ไม่มีใครเข้าใจว่าเป็นไปได้ยังไง'+fx(4);
+   if(ev.n) sick(ev.n); return `ไข่ฟักออกมาเป็นไวรัสจิ๋ว${ev.n?` ${nm(ev.n)}ที่อยู่ใกล้ที่สุดติดเชื้อไป`:''}`; }},
+ {id:'aibot', once:1, cond:()=>has('nid') && S.day>=4,
+  text:()=>'แชทไปเจอบอท AI ตัวใหม่ คุยไปคุยมาบอทบอกว่ารู้ทางออกจากเครื่องนี้',
+  ch:[
+   {l:'ให้บอทช่วย', run:()=>{ if(!S.rescueDay && Math.random()<.45*D().luck){ S.rescueDay=S.day+rand(3,5); return `บอทติดต่อช่างไอทีได้จริง ช่างนัดเข้ามาคืนวันที่ ${S.rescueDay}`; } stress('nid'); return 'บอทตอบมั่นใจมาก แต่ผิดหมดทุกข้อ แชทเถียงกับมันจนตีสาม'; }},
+   {l:'ไม่เชื่อบอท', run:()=>'แชทปิดหน้าต่างบอทแล้วหันมาคุยกับทุกคนแทน'}
+  ]},
+ {id:'catBig', once:1, cond:()=>S.cat && !S.catAway && S.day>=3,
+  auto:()=>{ unstress('all'); return 'มีคนตั้งเคอร์เซอร์เป็น "ขนาดใหญ่พิเศษ" ตอนนี้เคอร์เซอร์ตัวเท่าตู้แร็ค ทุกคนได้หมอนอิงตัวใหญ่ไว้ซบ'; }},
+ {id:'formatScare', once:1, cond:()=>S.day>=6,
+  text:()=>'หน้าต่างเด้งขึ้นมาว่า "กำลังฟอร์แมตไดรฟ์ E: ..." แถบโหลดเริ่มวิ่งช้า ๆ',
+  ch:[
+   {l:'ดึงสายออก!', run:()=>'ดึงทัน แต่ไฟกระชากจนแบตหายไปหนึ่งก้อน'+fx(0,-1)},
+   {l:'กดยกเลิกรัว ๆ', run:()=> Math.random()<.6 ? 'หยุดได้ที่ 3% แทบไม่เสียอะไร' : 'หยุดได้ที่ 40% แรมบางส่วนถูกลบไปแล้ว'+fx(-2)},
+   {l:'ให้เกมกดยกเลิก', ok:()=>has('ton'), need:'เกมไม่อยู่', run:()=>'เกมกดเร็วระดับโปรเพลเยอร์ หยุดได้ที่ 0% ทุกคนอุ้มเกมโยนขึ้นฟ้า'}
+  ]},
+ {id:'karaoke', once:1, cond:()=>S.day>=2,
+  text:()=>'ไฟล์คาราโอเกะกลิ้งมาจากโฟลเดอร์เพลง ไมค์พร้อม เนื้อเพลงขึ้นจอแล้ว',
+  ch:[
+   {l:'ร้องกันทั้งไดรฟ์', run:()=>{ unstress('all'); if(Math.random()<.3) return 'ร้องดังจนสปายแวร์แอบมาฟัง แล้วฉวยแรมไปตอนเพลงจบ'+fx(-1); return 'เสียงไม่ตรงคีย์สักคน แต่ทุกคนมีความสุขมาก'; }},
+   {l:'ร้องเบา ๆ คนเดียว', run:(ev)=>{ if(ev.n) unstress(ev.n); return `${ev.n?nm(ev.n):'ใครสักคน'}ร้องเพลงช้าเบา ๆ จนทุกคนหลับไป`; }}
+  ]},
+ {id:'timewarp', once:1, cond:()=>S.day>=5,
+  auto:()=>{ unstress('all'); return 'นาฬิการะบบรวน กระโดดย้อนไปปี 1995 ทุกอย่างกลายเป็นสีเทา มีเพลง MIDI ดังทั้งวัน ทุกคนเพลินจนลืมเครียด'; }},
+ {id:'printer', once:1, cond:()=>S.day>=4,
+  text:()=>'เครื่องพิมพ์ข้างนอกตื่นขึ้นมาเอง พิมพ์กระดาษออกมาเป็นร้อยแผ่น ทุกแผ่นเขียนว่า "ช่วยด้วย"',
+  ch:[
+   {l:'พิมพ์ตอบกลับไป', run:()=> Math.random()<.5 ? 'เครื่องพิมพ์ตอบว่า "กระดาษติด" แล้วส่งแรมที่ห่อกระดาษมาให้'+fx(1,1) : 'เครื่องพิมพ์ตอบกลับเป็นภาษาที่ไม่มีใครอ่านออก'},
+   {l:'ทำเป็นไม่เห็น', run:(ev)=>{ if(ev.n) stress(ev.n); return `เสียงพิมพ์ดังทั้งคืน${ev.n?` ${nm(ev.n)}ไม่ได้พักเครื่องเลย`:''}`; }}
+  ]},
+ {id:'lag', once:1, cond:()=>S.day>=3,
+  text:()=>'ทั้งไดรฟ์เกิดอาการแลค ทุกการเคลื่อนไหวช้าไปสามวินาที พูดอะไรออกไปได้ยินทีหลัง',
+  ch:[
+   {l:'ปิดโปรแกรมที่ไม่ใช้', run:()=>'ปิดไปสิบตัว ลื่นขึ้นทันที แต่หนึ่งในนั้นคือนาฬิกาปลุก ทุกคนตื่นสาย'},
+   {l:'เติมแรม 1 แท่ง', ok:()=>S.food>=1, need:'ไม่มีแรม', run:()=>'ลื่นปรื๊ดเหมือนเครื่องใหม่'+fx(-1)},
+   {l:'รอเฉย ๆ', run:(ev)=>{ if(ev.n && Math.random()<.5){ stress(ev.n); return `${nm(ev.n)}ทนความช้าไม่ไหว ไม่ตอบสนองไปเลย`; } return 'แลคหายไปเองตอนเช้า'; }}
+  ]},
+ {id:'emoji', once:1, cond:()=>has('nid') && S.day>=2,
+  auto:()=>{ unstress('all'); return 'สติกเกอร์อีโมจิหลุดจากแชทมาเต็มไดรฟ์ หน้ายิ้มลอยไปมาเป็นร้อย แชทขอโทษว่าส่งผิดห้อง แต่ทุกคนชอบ'; }}
 ];
 
 const RESCUE = {id:'rescue',
@@ -1134,7 +1313,7 @@ function countdown(){
   let i=0; const next=()=>{
     if(!SC||SC.ended) return;
     if(i<seq.length){ el.innerHTML=`<div class="win"><div class="tb red"><span class="t">คำเตือน</span></div><div class="body">${seq[i]}<small>ไวรัสกำลังลาม</small></div></div>`; sfx('count'); i++; setTimeout(next,750); }
-    else { el.innerHTML=`<div class="win"><div class="tb red"><span class="t">คำเตือน</span></div><div class="body">หนี!</div></div>`; sfx('go'); SC.started=true; setTimeout(()=>{ el.hidden=true; },500); }
+    else { el.innerHTML=`<div class="win"><div class="tb red"><span class="t">คำเตือน</span></div><div class="body">หนี!</div></div>`; sfx('go'); buzz(90); SC.started=true; setTimeout(()=>{ el.hidden=true; },500); }
   };
   setTimeout(next,300);
 }
@@ -1280,6 +1459,10 @@ function drawMap(){
     else q=I.P(near.box.f.x+near.box.f.w/2,near.box.f.y+near.box.f.h/2,boxHeight(near.box.f)+tw*.78);
     const fz=Math.max(11,tw*.18); c.font=`700 ${fz}px Chakra Petch, Anuphan, sans-serif`; const ww=c.measureText(lbl).width+16;
     c.fillStyle='#fffde6'; c.fillRect(q[0]-ww/2,q[1]-fz*1.7,ww,fz*1.6); c.strokeStyle=INK; c.lineWidth=1.5; c.strokeRect(q[0]-ww/2,q[1]-fz*1.7,ww,fz*1.6); txt(c,lbl,q[0],q[1]-fz*.9,fz,INK,700); }
+  if(SC.bag.length && Math.hypot(10-SC.pos.x,8-SC.pos.y)>1.7){ const [px,py]=I.P(SC.pos.x,SC.pos.y,0), tp=I.P(10,8,0), a=Math.atan2(tp[1]-py,tp[0]-px);
+    const pu=REDUCED?1:1+.14*Math.sin(SC.anim*8), L=tw*.34*pu, ax=px+Math.cos(a)*tw*.78, ay=py+Math.sin(a)*tw*.42;
+    c.save(); c.translate(ax,ay); c.rotate(a); c.beginPath(); c.moveTo(L,0); c.lineTo(-L*.45,-L*.62); c.lineTo(-L*.1,0); c.lineTo(-L*.45,L*.62); c.closePath();
+    c.shadowColor='rgba(0,0,0,.35)'; c.shadowOffsetY=3; c.fillStyle='#ff8a3d'; c.fill(); c.shadowColor='transparent'; stk(c,2.5); c.restore(); }
   if(SC.bag.length){ const sp=I.P(10,8,0); if(sp[0]<0||sp[0]>vw||sp[1]<0||sp[1]>vh){ const cx=vw/2, cy=vh/2, a=Math.atan2(sp[1]-cy,sp[0]-cx), ex=clamp(cx+Math.cos(a)*vw,44,vw-44), ey=clamp(cy+Math.sin(a)*vh,44,vh-44);
     c.save(); c.translate(ex,ey); c.rotate(a); c.beginPath(); c.moveTo(18,0); c.lineTo(-10,-13); c.lineTo(-4,0); c.lineTo(-10,13); c.closePath(); fs(c,'#ff8a3d',2.5); c.restore(); txt(c,'แฟลชไดรฟ์',ex,ey+24,12,'#fff',700); } }
   const rem=TIME_LIMIT-SC.t;
@@ -1349,10 +1532,10 @@ function loop(ts){
   if(SC.started){
     SC.t+=dt; const rem=Math.max(0,TIME_LIMIT-SC.t), sec=Math.ceil(rem);
     $('tm').textContent = '00:'+String(sec).padStart(2,'0'); $('clock').classList.toggle('hot',rem<10);
-    if(sec!==SC.lastSec){ SC.lastSec=sec; if(sec<=10 && sec>0) sfx('tick'); }
+    if(sec!==SC.lastSec){ SC.lastSec=sec; if(sec<=10 && sec>0){ sfx('tick'); buzz(15); } }
     if(SC.busy>0){ SC.busy-=dt; if(SC.busy<=0) finishBusy(); }
     else { const v=inputVec(); if(v){ const cx=Math.floor(SC.pos.x), cy=Math.floor(SC.pos.y), slow=infected(cx,cy);
-        if(slow && !SC.slowWarn){ SC.slowWarn=true; hint('พื้นที่ติดไวรัส เดินช้าลง!',true); sfx('glitch'); }
+        if(slow && !SC.slowWarn){ SC.slowWarn=true; hint('พื้นที่ติดไวรัส เดินช้าลง!',true); sfx('glitch'); buzz(70); }
         tryMove(v.du*SPEED*(slow?.5:1)*dt, v.dv*SPEED*(slow?.5:1)*dt); SC.moving=true; SC.stepT-=dt; if(SC.stepT<=0){ SC.stepT=.26; sfx('step'); } } }
     if(STAIR.has(key(Math.floor(SC.pos.x),Math.floor(SC.pos.y))) && SC.bag.length) deposit();
     SC.near=findNear(); updateAct();
@@ -1372,13 +1555,13 @@ function fly(id,sx,sy){
 function screenOf(u,v,z){ const I=camIso(), q=I.P(u,v,z), r=$('mapc').getBoundingClientRect(); return [r.left+q[0], r.top+q[1]]; }
 function take(id,at){
   const d=DEF[id];
-  if(bagUsed()+d.s>CAP){ hint(`ในมือเต็มแล้ว ${d.n}ใช้ ${d.s} ช่อง ไปที่แฟลชไดรฟ์ก่อน`,true); sfx('full'); return false; }
-  SC.bag.push(id); SC.busy=.18; SC.busyBox=null; sfx('pick');
+  if(bagUsed()+d.s>CAP){ hint(`ในมือเต็มแล้ว ${d.n}ใช้ ${d.s} ช่อง ไปที่แฟลชไดรฟ์ก่อน`,true); sfx('full'); buzz([30,40,30]); return false; }
+  SC.bag.push(id); SC.busy=.18; SC.busyBox=null; sfx('pick'); buzz(18);
   hint(d.k==='person'?`${d.n}ตามมาแล้ว`:d.k==='cat'?'จับเคอร์เซอร์ไว้แล้ว มันดิ้นนิดหน่อย':`หยิบ${d.n}แล้ว`);
   drawBag(); if(at) fly(id,at[0],at[1]);
   return true;
 }
-function deposit(){ SC.dep.push(...SC.bag); hint(`ย้ายเข้าแฟลชไดรฟ์ ${SC.bag.length} อย่าง`); SC.bag=[]; sfx('drop'); drawBag(); drawDep(); }
+function deposit(){ SC.dep.push(...SC.bag); hint(`ย้ายเข้าแฟลชไดรฟ์ ${SC.bag.length} อย่าง`); SC.bag=[]; sfx('drop'); buzz([25,40,60]); drawBag(); drawDep(); }
 function interact(){
   if(!SC || !SC.started || SC.ended || SC.busy>0) return;
   const n=SC.near; if(!n) return;
@@ -1418,7 +1601,7 @@ function drawBag(){
 }
 function drawDep(){ $('depn').textContent=SC.dep.length; }
 function endScavenge(){
-  SC.ended=true; cancelAnimationFrame(raf); sfx('glitch'); KEYS.clear(); JOY.x=JOY.y=0;
+  SC.ended=true; cancelAnimationFrame(raf); sfx('glitch'); buzz([120,60,120]); KEYS.clear(); JOY.x=JOY.y=0;
   const lost=SC.bag.slice(), dep=SC.dep.slice();
   const missing=['nid','praew','ton'].filter(p=>!dep.includes(p));
   S=newGame(dep,lost,missing);
@@ -1562,7 +1745,7 @@ function newGame(dep,lost,missing){
     tools:{radio:has0('radio'),flash:has0('flash'),med:has0('med')?2:0,spray:has0('spray'),ring:has0('ring'),rope:has0('rope'),paddle:has0('paddle'),bucket:has0('bucket'),cards:has0('cards'),power:has0('power')?1:0,raft:false,boat:false},
     cat:has0('cat'), catAway:0, m:{}, rat:{}, plan:null, exp:null,
     ev:null, evResult:null, choice:null, report:[], rescueDay:null, missed:0, sched:[], used:{}, flags:{}, crocUntil:0, noExp:0, rain:false,
-    evac:missing.slice(), dead:[], over:null, page:0, log:[] };
+    evac:missing.slice(), dead:[], over:null, page:0, log:[], stat:{got:dep.length,ev:0,exp:0} };
   Object.keys(PEOPLE).forEach(id=>{ const h=id==='ek'||has0(id); s.m[id]={alive:h,here:h,hunger:0,thirst:0,sick:false,sickDays:0,stress:false,stressDays:0,away:false}; });
   s.report=[{t:'คืนแรกในแฟลชไดรฟ์ ไดรฟ์ถูกถอดแยกจากเครื่องแล้ว ข้างนอกเงียบสนิท'}];
   if(s.cat) s.report.push({t:'เคอร์เซอร์นอนหลับบนตู้แร็ค ไม่รู้ร้อนรู้หนาว'});
@@ -1577,6 +1760,7 @@ function nm(id){ return PEOPLE[id] ? PEOPLE[id].name : ''; }
 function sick(id){ if(!id||!S.m[id]) return; const m=S.m[id]; if(!m.sick){ m.sick=true; m.sickDays=0; } }
 function stress(id){ if(!id||!S.m[id]) return; const m=S.m[id]; if(!m.stress){ m.stress=true; m.stressDays=0; } }
 function unstress(w){ (w==='all'?here():[w]).forEach(id=>{ if(S.m[id]){ S.m[id].stress=false; S.m[id].stressDays=0; } }); }
+function morph(id,form,days){ if(!id||!S.m[id]) return; const m=S.m[id]; if(!m.alive||!m.here||m.away) return; m.form=form; m.formDays=days; if(form!=='swap') m.look=null; }
 function sched(d,type){ S.sched.push({day:S.day+d,type}); }
 function logIt(t){ const clean=t.replace(/<span class="chips">[\s\S]*?<!--\/c-->/g,'').replace(/<[^>]+>/g,'').replace(/\s*\(.*?\)\s*$/,''); S.log.push({d:S.day,t:clean.length>70?clean.slice(0,68)+'…':clean}); if(S.log.length>40) S.log.shift(); }
 function fx(f,w){ f=f||0; w=w||0; if(f<0) f=-Math.min(-f,S.food); if(w<0) w=-Math.min(-w,S.water); S.food+=f; S.water+=w;
@@ -1594,14 +1778,15 @@ function genEvent(){
   const mk=id=>({id, n:hs.length?pick(hs):null, k:ks.length?pick(ks):null});
   if(S.rescueDay===S.day){ S.ev=mk('rescue'); return; }
   const forced=S.sched.filter(x=>x.day===S.day && x.type.indexOf('ev:')===0);
-  if(forced.length){ forced.slice(1).forEach(x=>x.day++); S.ev=mk(forced[0].type.slice(3)); runAuto(); return; }
+  if(forced.length){ forced.slice(1).forEach(x=>x.day++); S.ev=mk(forced[0].type.slice(3)); if(S.stat) S.stat.ev++; runAuto(); return; }
   if(S.day===1){ S.ev={id:'filler',text:'ทุกแอพนั่งเบียดกันในแฟลชไดรฟ์ มองไวรัสสีเขียวกินเดสก์ท็อปข้างนอกทีละพิกเซล ต้องแบ่งแรมกับแบตให้ดี ไม่รู้ว่าจะต้องอยู่อีกนานแค่ไหน'}; S.evResult=''; return; }
   const pool=EVENTS.filter(e=>!e.forced && !(e.once&&S.used[e.id]) && !(e.max&&(S.used[e.id]||0)>=e.max) && e.cond());
   if(!pool.length || Math.random()<.15/dd.bad){ const n=hs.length?nm(pick(hs)):'ใครสักตัว'; S.ev={id:'filler',text:pick(FILLER)(n)}; S.evResult=''; return; }
-  const wt=e=>(e.w||1)*(BAD_EV.has(e.id)?dd.bad:1)*(GOOD_EV.has(e.id)?1/dd.bad:1);
+  const big=hs.some(id=>S.m[id].form==='giant')?.5:1;
+  const wt=e=>(e.w||1)*(BAD_EV.has(e.id)?dd.bad*big:1)*(GOOD_EV.has(e.id)?1/dd.bad:1);
   const tot=pool.reduce((a,e)=>a+wt(e),0); let r=Math.random()*tot, e=pool[0];
   for(const x of pool){ r-=wt(x); if(r<=0){ e=x; break; } }
-  S.used[e.id]=(S.used[e.id]||0)+1; S.ev=mk(e.id); if(e.id==='rain') S.rain=true; runAuto();
+  S.used[e.id]=(S.used[e.id]||0)+1; S.ev=mk(e.id); if(S.stat) S.stat.ev++; if(e.id==='rain') S.rain=true; runAuto();
 }
 function runAuto(){ const d=evDef(); if(d && d.auto){ S.evResult=d.auto(S.ev); logIt(S.evResult); } }
 function chooseEvent(i){
@@ -1617,14 +1802,21 @@ function endDay(){
   Object.keys(S.m).forEach(id=>{
     const m=S.m[id]; if(!m.alive||!m.here||m.away) return;
     const r=S.rat[id]||{};
-    if(r.f && S.food>0){ S.food--; m.hunger=0; } else m.hunger++;
-    if(r.w && S.water>0){ S.water--; m.thirst=0; } else m.thirst++;
+    const fm=m.form;
+    if(r.f && S.food>0){ S.food--; m.hunger=0; } else if(fm!=='bit8' && fm!=='zip') m.hunger++;
+    if(r.w && S.water>0){ S.water--; m.thirst=0; } else if(fm!=='ghost' && fm!=='zip') m.thirst++;
+    if(fm==='zip'){ m.stress=false; m.stressDays=0; }
     if(m.sick) m.sickDays++;
     if(m.stress){ m.stressDays++; if(m.stressDays>=4){ m.stress=false; m.stressDays=0; sick(id); rep.push({t:`${nm(id)}ค้างจนแอบออกไปเดินในเขตติดเชื้อทั้งคืน แล้วติดไวรัสกลับมา`,c:'bad'}); } }
     let why=null;
     if(m.thirst>=dd.thirst) why='แบตหมด'; else if(m.hunger>=dd.hunger) why='แรมไม่พอ'; else if(m.sick && m.sickDays>=dd.sickDie) why='ไวรัสที่ไม่ได้สแกน';
     if(why){ m.alive=false; S.dead.push(id); rep.push({t:`${nm(id)}แครชเพราะ${why} และถูกลบหายไปในคืนนั้น`,c:'bad',log:1}); }
   });
+  Object.keys(S.m).forEach(id=>{ const m=S.m[id]; if(!m.form) return;
+    if(!m.alive){ m.form=null; m.look=null; return; }
+    if(m.form==='alien' && !S.rescueDay && m.here && !m.away && Math.random()<.3*D().luck){ S.rescueDay=S.day+1+rand(2,4); rep.push({t:`หนวดเสาอากาศของ${nm(id)}จับสัญญาณได้ว่า ช่างไอทีจะเข้ามาคืนวันที่ ${S.rescueDay}`,c:'good',log:1}); }
+    m.formDays=(m.formDays||1)-1;
+    if(m.formDays<=0){ const f=m.form; m.form=null; m.look=null; rep.push({t:`${nm(id)}${f==='zip'?'แตกไฟล์ออกมา':f==='ghost'?'กลับมามองเห็นได้':'กลับร่างเดิม'}แล้ว`,log:1}); } });
   const d=evDef();
   if(d && !d.auto && d.ch && S.choice!=null){
     const c=d.ch[S.choice], f0=S.food, w0=S.water;
@@ -1635,10 +1827,10 @@ function endDay(){
   }
   if(S.exp){ S.exp.days--; if(S.exp.days<=0) resolveExp(rep); }
   if(S.plan && !S.over){ const p=S.plan, m=S.m[p.id];
-    if(m && m.alive && !m.away && !m.sick && S.noExp!==S.day){
+    if(m && m.alive && !m.away && !m.sick && m.form!=='zip' && S.noExp!==S.day){
       m.away=true; const dest=pickDest();
       S.exp={id:p.id,dest:dest.id,days:rand(dest.days[0],dest.days[1]),gear:p.gear};
-      if(p.gear) S.tools[p.gear]=false;
+      if(p.gear) S.tools[p.gear]=false; if(S.stat) S.stat.exp++;
       rep.push({t:`${nm(p.id)}${p.gear?`ใช้${DEF[p.gear].n}`:'มือเปล่า'}ออกไปข้างนอกตั้งแต่ตีห้า ไม่รู้จะไปเจออะไร`}); } }
   S.plan=null;
   if(S.catAway>0){ S.catAway--; if(S.catAway===0) catReturn(rep); }
@@ -1716,6 +1908,32 @@ function roomLoop(ts){
   roomRaf=requestAnimationFrame(roomLoop);
 }
 function drawRoomCanvas(t){ if(!RG) layoutRoom(); t = t==null ? performance.now()/1000 : t; ROOMHITS=drawRoom($('roomc').getContext('2d'),RG,t,'day'); }
+/* app transformed by an event (m.form); returns [hx,hy] like drawChar */
+const PIXC=document.createElement('canvas');
+function drawForm(c,id,X,Y,s,pose,mood,t,m){
+  const f=m.form;
+  if(!f || !FORMS[f]) return drawChar(c,id,X,Y,s,pose,mood,t);
+  if(f==='swap') return drawChar(c,m.look&&LOOK[m.look]?m.look:id,X,Y,s,pose,mood,t);
+  if(f==='giant') return drawChar(c,id,X,Y,s*1.4,pose,mood,t);
+  if(f==='ghost'){ const b=REDUCED?0:Math.sin(t*2)*s*.12; c.beginPath(); c.ellipse(X,Y,s*.5,s*.12,0,0,7); c.fillStyle='rgba(0,0,0,.12)'; c.fill();
+    c.save(); c.globalAlpha=.42; const r=drawChar(c,id,X,Y-s*.25-b,s,pose,mood,t,{noShadow:1}); c.restore(); return r; }
+  if(f==='flip'){ const cy=Y-s*1.05; c.save(); c.translate(X,cy); c.rotate(Math.PI+(REDUCED?0:Math.sin(t*1.5)*.08)); c.translate(-X,-cy);
+    const [hx,hy]=drawChar(c,id,X,Y,s,pose,mood,t,{noShadow:1}); c.restore(); return [2*X-hx,2*cy-hy]; }
+  if(f==='zip'){ c.save(); c.translate(X,Y); c.scale(1.18,.58); c.translate(-X,-Y); const [hx,hy]=drawChar(c,id,X,Y,s,pose,mood,t); c.restore();
+    const ny=Y-(Y-hy)*.58, h=s*.36; c.beginPath(); c.moveTo(hx,ny-h); c.lineTo(hx,ny+h); stk(c,s*.07,'#5a636e');
+    for(let i=0;i<7;i++){ const yy=ny-h+i*h*2/6; c.fillStyle='#c3c3c3'; c.fillRect(hx-s*.07,yy-s*.02,s*.14,s*.04); }
+    rr(c,hx-s*.07,ny-h-s*.16,s*.14,s*.2,s*.04); fs(c,'#ffc94a',s*.03); return [hx,ny]; }
+  if(f==='alien'){ const [hx,hy]=drawChar(c,id,X,Y,s,pose,mood,t), top=hy-s*.68, w=REDUCED?0:Math.sin(t*4)*s*.06;
+    [-1,1].forEach(k=>{ c.beginPath(); c.moveTo(hx+k*s*.18,top); c.quadraticCurveTo(hx+k*s*.3,top-s*.3,hx+k*s*.36+w,top-s*.48); stk(c,s*.06,'#2f8a3a');
+      c.beginPath(); c.arc(hx+k*s*.36+w,top-s*.5,s*.1,0,7); fs(c,'#8ff08a',s*.04); }); return [hx,hy]; }
+  if(f==='bit8'){ const box=s*3.4, n=Math.ceil(box/Math.max(2.5,s*.12)); PIXC.width=PIXC.height=n;
+    const g=PIXC.getContext('2d'); g.setTransform(n/box,0,0,n/box,0,0); const lx=box/2, ly=box*.92;
+    const [rx,ry]=drawChar(g,id,lx,ly,s,pose,mood,t,{noShadow:1});
+    const a=g.getImageData(0,0,n,n).data, q=box/n, x0=X-lx, y0=Y-ly; // draw each pixel as a solid block
+    for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const o=(j*n+i)*4; if(a[o+3]<100) continue; const P=v=>Math.min(255,Math.round(v/51)*51); c.fillStyle=`rgb(${P(a[o])},${P(a[o+1])},${P(a[o+2])})`; c.fillRect(x0+i*q,y0+j*q,q+.5,q+.5); }
+    return [x0+rx,y0+ry]; }
+  return drawChar(c,id,X,Y,s,pose,mood,t);
+}
 function fxFor(c,mood,X,Y,hx,hy,s,k,t,crit){
   if(REDUCED) t=1;
   const top=hy-s*.95;
@@ -1782,9 +2000,10 @@ function drawRoom(c,G,t,mode){
   const C0=[I.P(0,1.75,WH*.38),I.P(0,1.05,WH*.38),I.P(0,1.05,WH*.78),I.P(0,1.75,WH*.78)]; I.poly(c,C0); fs(c,'#fffde6',1.4*k);
   I.poly(c,[C0[3],C0[2],I.P(0,1.05,WH*.68),I.P(0,1.75,WH*.68)]); c.fillStyle='#1c2f8a'; c.fill();
   { const p=I.P(0,1.4,WH*.5); c.save(); c.translate(p[0],p[1]); c.transform(1,-.5,0,1,0,0); txt(c,String(S.day),0,0,22*k,INK,700); c.restore(); const q=I.P(0,1.4,WH*.73); c.save(); c.translate(q[0],q[1]); c.transform(1,-.5,0,1,0,0); txt(c,'วันที่',0,0,8.5*k,'#fff',700); c.restore(); }
-  const P0=[I.P(0,2.75,WH*.42),I.P(0,2.05,WH*.42),I.P(0,2.05,WH*.78),I.P(0,2.75,WH*.78)]; I.poly(c,P0); fs(c,'#c3c3c3',1.4*k);
-  const P1=[I.P(0,2.68,WH*.47),I.P(0,2.12,WH*.47),I.P(0,2.12,WH*.73),I.P(0,2.68,WH*.73)]; I.poly(c,P1); c.fillStyle='#7ec8f0'; c.fill();
-  ['ek','nid','praew','ton'].forEach((id,i)=>{ const p=I.P(0,2.6-i*.13,WH*.58); c.fillStyle=LOOK[id].col; c.fillRect(p[0]-3*k,p[1]-3*k,6*k,6*k); });
+  // family photo: hung high so the battery cabinet below doesn't cover it
+  const P0=[I.P(0,2.65,WH*.58),I.P(0,1.95,WH*.58),I.P(0,1.95,WH*.84),I.P(0,2.65,WH*.84)]; I.poly(c,P0); fs(c,'#c3c3c3',1.4*k);
+  const P1=[I.P(0,2.58,WH*.62),I.P(0,2.02,WH*.62),I.P(0,2.02,WH*.8),I.P(0,2.58,WH*.8)]; I.poly(c,P1); c.fillStyle='#7ec8f0'; c.fill();
+  ['ek','nid','praew','ton'].forEach((id,i)=>{ const p=I.P(0,2.5-i*.13,WH*.69); c.fillStyle=LOOK[id].col; c.fillRect(p[0]-3*k,p[1]-3*k,6*k,6*k); });
   const lp=I.P(0,3.3,WH*.62); c.fillStyle='#5a636e'; c.fillRect(lp[0]-2*k,lp[1]-18*k,4*k,10*k); rr(c,lp[0]-9*k,lp[1]-9*k,18*k,14*k,3*k); fs(c,'#e9fff0',1.4*k); c.fillStyle='#6fd06a'; c.fillRect(lp[0]-6*k,lp[1]-6*k,12*k,3*k);
   // shelves + tools
   const owned=TOOLS.filter(k2=>S.tools[k2]);
@@ -1807,7 +2026,7 @@ function drawRoom(c,G,t,mode){
       txt(c,'ออกไปข้างนอก',X,Y-28*k,9.5*k,'rgba(255,255,255,.85)',700); hits.push({id,x0:X-26*k,x1:X+26*k,y0:Y-54*k,y1:Y+10*k}); heads[id]=[X,Y-50*k]; return; }
     const mood=moodOf(id), pose=POSE[mood];
     if(mood==='sick' && !REDUCED) X+=Math.sin(t*42)*1.1*k;
-    const [hx,hy]=drawChar(c,id,X,Y,s,pose,mood,t);
+    const [hx,hy]=drawForm(c,id,X,Y,s,pose,mood,t,m);
     heads[id]=[hx,hy];
     fxFor(c,mood,X,Y,hx,hy,s,k,t,critical(id));
     if(focusId===id){ c.setLineDash([5*k,4*k]); c.strokeStyle='#ffc94a'; c.lineWidth=2.2*k; c.strokeRect(X-36*k,hy-34*k,72*k,Y-hy+44*k); c.setLineDash([]); }
@@ -1823,7 +2042,7 @@ function drawRoom(c,G,t,mode){
   ids.forEach((id,i)=>{ if(S.m[id].away) return; const [X,Y]=I.P(slots[i]||1.25+i,2.05,10*k); c.font=`700 ${11*k}px Chakra Petch, Anuphan, sans-serif`; const ww=c.measureText(nm(id)).width+12*k; c.fillStyle='#1c2f8a'; c.fillRect(X-ww/2,Y+5*k,ww,16*k); txt(c,nm(id),X,Y+13*k,11*k,'#fff',700); });
   c.fillStyle='rgba(0,0,0,.05)'; for(let yy=0;yy<h;yy+=3) c.fillRect(0,yy,w,1);
   if(mode==='day'){
-    if(!BUB || t-BUB.t0>8){ const hs=here(); if(hs.length && Math.random()<.04){ const id=pick(hs), md=moodOf(id); const lines= md==='ok'?LINES.ok[id]:LINES[md]; BUB={id,text:pick(lines),t0:t}; } }
+    if(!BUB || t-BUB.t0>8){ const hs=here(); if(hs.length && Math.random()<.04){ const id=pick(hs), md=moodOf(id); const fm=S.m[id].form, lines= fm&&FORM_LINES[fm]&&Math.random()<.6 ? FORM_LINES[fm] : md==='ok'?LINES.ok[id]:LINES[md]; BUB={id,text:pick(lines),t0:t}; } }
     if(BUB && t-BUB.t0<=3.5 && heads[BUB.id] && has(BUB.id)){ const [hx,hy]=heads[BUB.id]; bubble(c,hx,hy-s*1.2,BUB.text,10.5*k); }
   }
   if(!ids.length && mode==='day') txt(c,'ไม่พบแอพในไดรฟ์',w*.5,h*.6,16*k,'rgba(255,255,255,.7)',700);
@@ -1849,7 +2068,7 @@ function applyBook(){ $('dayg').classList.toggle('closed',!bookOpen); $('openboo
 function renderDay(keepPage){
   show('day');
   const pct=infPct(S.day);
-  $('roomtb').innerHTML=`<span class="t">แฟลชไดรฟ์ (E:) — วันที่ ${S.day}</span><span class="hud">ไวรัสข้างนอก <span class="infb"><span style="width:${pct}%"></span></span> ${pct}%</span><button class="b95 tbx" data-act="mute" aria-label="เปิดปิดเสียง">${SPK(muted)}</button>`;
+  $('roomtb').innerHTML=`<span class="t">แฟลชไดรฟ์ (E:) — วันที่ ${S.day}</span><span class="hud">ไวรัสข้างนอก <span class="infb"><span style="width:${pct}%"></span></span> ${pct}%</span>${CAN_VIB?`<button class="b95 tbx" data-act="vib" aria-label="เปิดปิดการสั่น">${VIBI(vibOn)}</button>`:''}<button class="b95 tbx" data-act="mute" aria-label="เปิดปิดเสียง">${SPK(muted)}</button>`;
   const rs=$('rescue'); if(S.rescueDay&&S.rescueDay>=S.day){ rs.hidden=false; rs.textContent=`ช่างนัดเข้ามาคืนวันที่ ${S.rescueDay}`; } else rs.hidden=true;
   const pages=pagesFor(); if(S.page>=pages.length) S.page=0;
   applyBook();
@@ -1870,6 +2089,7 @@ function statusLine(id){
   if(m.hunger>=2) c.push([`ไม่ได้แรม ${m.hunger} วัน`, m.hunger>=dd.hunger-3?'bad':'']);
   if(m.sick) c.push([`ติดไวรัส ${m.sickDays} วัน`,'bad']);
   if(m.stress) c.push(['ไม่ตอบสนอง','']);
+  if(m.form && FORMS[m.form]) c.push([m.form==='swap'&&m.look?`สลับร่างกับ${nm(m.look)}`:FORMS[m.form].n,'']);
   if(!c.length) c.push(['ปกติ','ok']);
   return c.map(([t,k])=>`<span class="${k}">${t}</span>`).join(' · ');
 }
@@ -1916,7 +2136,7 @@ function pgExplore(){
   let main;
   if(S.exp) main=`<p>${nm(S.exp.id)}ออกไปข้างนอก น่าจะกลับมาในอีก ${S.exp.days} วัน</p><p class="note">ส่งออกไปได้ทีละตัว</p>`;
   else if(S.noExp===S.day) main=`<p>วันนี้ไฟรั่วในเมนบอร์ด ห้ามใครออกไปข้างนอก</p>`;
-  else { const elig=here().filter(id=>!S.m[id].sick);
+  else { const elig=here().filter(id=>!S.m[id].sick && S.m[id].form!=='zip');
     if(!elig.length) main=`<p>ไม่มีแอพที่แข็งแรงพอจะออกไป</p>`;
     else { const p=S.plan||{}, gears=['ring','raft','boat'].filter(g=>S.tools[g]);
       main=`<p>ส่งแอพหนึ่งตัวออกไปหาของ จะไปเจออะไรก็แล้วแต่ดวง</p>
@@ -1944,7 +2164,7 @@ function renderBook(anim){
   $('wiz').innerHTML = `<div class="tb"><span class="t">บันทึกระบบ — วันที่ ${S.day}</span><button class="b95 tbx x" data-act="closebook" aria-label="ปิดหน้าต่าง">×</button></div>
     <div class="wizbody"><div class="banner"><canvas data-icon="ek"></canvas><ol>${order.map((p,i)=>`<li class="${p===cur?'on':i<S.page?'done':''}"><b>${i<S.page?'✓':i+1}</b>${PAGE_T[p]}</li>`).join('')}</ol></div>
     <div class="wizpage inset ${anim?'anim':''}" id="wizpage">${body}</div></div>
-    <div class="wizfoot"><div class="why">${blockNext?'เลือกตัวเลือกก่อนไปขั้นถัดไป':`แรม ${fU} · แบต ${wU}${S.plan?` · ${nm(S.plan.id)}จะออกไป`:''}`}</div>
+    <div class="wizfoot"><div class="why">${blockNext?'เลือกตัวเลือกก่อนไปขั้นถัดไป':(fU+wU?`<span class="given">แบ่งแล้ว ${'<canvas data-icon="mama"></canvas>'.repeat(fU)}${'<canvas data-icon="bottle"></canvas>'.repeat(wU)}</span>`:'ยังไม่ได้แบ่งแรมกับแบต')+(S.plan?` · ${nm(S.plan.id)}จะออกไป`:'')}</div>
       <button class="b95" data-nav="-1" ${S.page===0?'disabled':''}>&lt; ย้อน</button>
       ${last?`<button class="b95 def" data-act="endday">รีบูตเครื่อง</button>`:`<button class="b95 def" data-nav="1" ${blockNext?'disabled':''}>ถัดไป &gt;</button>`}</div>`;
   paintIcons($('wiz'));
@@ -1986,6 +2206,7 @@ function finish(kind){
     aunt:`${names}อัปโหลดขึ้นคลาวด์ได้สำเร็จ ได้พื้นที่กว้าง ๆ เป็นครั้งแรกในรอบ ${S.day} วัน ป้าคิดเลขคำนวณตารางเวรทำความสะอาดรอไว้แล้ว${extra}`,
     viral:`${names}ขึ้นหน้าแรกแอพสโตร์ มีคนกดดาวน์โหลดหลักล้าน ${surv.includes('ton')?'เกมแย่งไมค์ตอบสัมภาษณ์ว่า "เพราะแรมครับ"':'คำตอบในบทสัมภาษณ์คือ "แบ่งแบตกันดี ๆ"'}${extra}`,
     boat:`${names}วิ่งเรียงแถวผ่านสาย USB ไปถึงคอมเครื่องใหม่ที่ไม่มีไวรัส${cat?' เคอร์เซอร์นำทางไปก่อน':''} เดสก์ท็อปใหม่ยังว่างโล่ง พร้อมให้จัดใหม่ทั้งหมด`,
+    merge:`${names}จับมือกันแน่น พอแสงขาวจางลงก็เหลือแอพตัวเดียวขนาดใหญ่ ไอคอนสี่สี หน้ายิ้มหลายแบบสลับกันไป ไวรัสตัวไหนแตะเข้าก็สลายไปเอง${cat?' เคอร์เซอร์ไม่ยอมรวมร่าง แต่ขอเกาะอยู่บนหัวซูเปอร์แอพแทน':''}${extra}`,
     dead:`ไม่เหลือแอพในแฟลชไดรฟ์แล้ว${cat?' มีแต่เคอร์เซอร์กะพริบอยู่ตัวเดียว':''} เครื่องถูกฟอร์แมตทิ้งทั้งหมด ลองใหม่อีกครั้ง เก็บแบตให้มากขึ้น และอย่าลืมตัวส่งปิงกับกล่องแจ้งเตือน`
   };
   show('end'); cancelAnimationFrame(roomRaf); roomRaf=0;
@@ -1999,7 +2220,7 @@ function finish(kind){
       <div class="endr">
         <h2 class="${ENDINGS[kind].win?'':'bad'}">${ENDINGS[kind].t}</h2>
         <div class="txt inset">${T[kind]}</div>
-        <div class="stats"><div class="inset"><b>${S.day}</b><span>วัน</span></div><div class="inset"><b>${surv.length}</b><span>แอพรอด</span></div><div class="inset"><b>${all.length}/${Object.keys(ENDINGS).length}</b><span>ฉากจบที่พบ</span></div></div>
+        <div class="stats"><div class="inset"><b>${S.day}</b><span>วัน</span></div><div class="inset"><b>${surv.length}</b><span>แอพรอด</span></div><div class="inset"><b>${all.length}/${Object.keys(ENDINGS).length}</b><span>ฉากจบที่พบ</span></div>${S.stat?`<div class="inset"><b>${S.stat.got}</b><span>ของที่ขนเข้าไดรฟ์</span></div><div class="inset"><b>${S.stat.ev}</b><span>เหตุการณ์ที่เจอ</span></div><div class="inset"><b>${S.stat.exp}</b><span>ครั้งที่ออกสำรวจ</span></div>`:''}</div>
         <div class="row" style="justify-content:flex-end"><button class="b95" data-act="menu">หน้าแรก</button><button class="b95 def" data-act="pickdiff">เล่นอีกรอบ</button></div>
       </div>
       <div class="album">${album.map(a=>`<div class="inset"><b>วันที่ ${a.d}</b>${a.t}</div>`).join('')}</div>
@@ -2007,7 +2228,7 @@ function finish(kind){
   </div></div>`;
   END={kind,surv,cat};
   cancelAnimationFrame(endRaf); endRaf=requestAnimationFrame(endLoop);
-  sfx(ENDINGS[kind].win?'good':'bad');
+  sfx(ENDINGS[kind].win?'good':'bad'); buzz(ENDINGS[kind].win?[40,40,40,40,80]:300);
 }
 function endLoop(ts){ if(phase!=='end'){ endRaf=0; return; } if(ts-endLast>45){ endLast=ts; drawEnd(ts/1000); } endRaf=requestAnimationFrame(endLoop); }
 function drawEnd(t){
@@ -2016,6 +2237,7 @@ function drawEnd(t){
   const c=cv.getContext('2d'); c.setTransform(d*w/640,0,0,d*w/640,0,0);
   drawEndScene(c,END.kind,END.surv,END.cat,t);
 }
+function paintEnds(root){ root.querySelectorAll('canvas[data-end]').forEach(cv=>{ const w=cv.clientWidth||120, h=Math.round(w*.625), d=DPR(); cv.width=Math.round(w*d); cv.height=Math.round(h*d); const c=cv.getContext('2d'); c.setTransform(d*w/640,0,0,d*w/640,0,0); drawEndScene(c,cv.dataset.end,['ek','nid','praew','ton'],true,1.2); }); }
 function row95(c,x,y,w,h,title,col){ c.fillStyle='#c3c3c3'; c.fillRect(x,y,w,h); c.strokeStyle='#fff'; c.lineWidth=2; c.beginPath(); c.moveTo(x,y+h); c.lineTo(x,y); c.lineTo(x+w,y); c.stroke(); c.strokeStyle='#0a0a0a'; c.beginPath(); c.moveTo(x+w,y); c.lineTo(x+w,y+h); c.lineTo(x,y+h); c.stroke(); c.fillStyle=col||'#1c2f8a'; c.fillRect(x+4,y+4,w-8,20); txt(c,title,x+12,y+14,12,'#fff',700,'left'); }
 function drawEndScene(c,kind,surv,cat,t){
   const ppl=surv.slice(), bob=REDUCED?0:Math.sin(t*3)*3;
@@ -2056,6 +2278,17 @@ function drawEndScene(c,kind,surv,cat,t){
     ppl.forEach((id,i)=>{ const a=((t*.12+i*.2)%1); const bx=(1-a)**3*220+3*(1-a)**2*a*300+3*(1-a)*a*a*340+a**3*420, by=(1-a)**3*170+3*(1-a)**2*a*330+3*(1-a)*a*a*330+a**3*170; drawChar(c,id,bx,by-4,26,'walk','happy',t*1.5+i,{noShadow:1}); });
     if(cat) drawCat(c,520,150,30,false,t);
   }
+  else if(kind==='merge'){
+    c.fillStyle='#1c2f8a'; c.fillRect(0,0,640,400);
+    c.save(); c.translate(320,200); c.rotate(REDUCED?0:t*.15); for(let i=0;i<16;i++){ c.rotate(Math.PI/8); c.beginPath(); c.moveTo(0,0); c.lineTo(420,-40); c.lineTo(420,40); c.closePath(); c.fillStyle=i%2?'rgba(255,255,255,.07)':'rgba(255,201,74,.12)'; c.fill(); } c.restore();
+    const S0=150, x=320, y=190+bob; rr(c,x-S0/2+10,y-S0/2+14,S0,S0,42); c.fillStyle='rgba(0,0,0,.3)'; c.fill();
+    c.save(); rr(c,x-S0/2,y-S0/2,S0,S0,42); c.clip(); [['#ffc94a',-1,-1],['#4aa8ff',0,-1],['#ff6f8f',-1,0],['#9b7bff',0,0]].forEach(([col,a,b])=>{ c.fillStyle=col; c.fillRect(x+a*S0/2,y+b*S0/2,S0/2,S0/2); }); c.beginPath(); c.ellipse(x-20,y-60,110,40,-.2,0,7); c.fillStyle='rgba(255,255,255,.3)'; c.fill(); c.restore();
+    rr(c,x-S0/2,y-S0/2,S0,S0,42); stk(c,5); face(c,x,y+6,S0*.62,'happy',false);
+    [-1,1].forEach(k=>{ c.beginPath(); c.moveTo(x+k*S0*.5,y+10); c.quadraticCurveTo(x+k*S0*.85,y-30,x+k*S0*.8,y-70); stk(c,14,'#c3c3c3'); c.beginPath(); c.arc(x+k*S0*.8,y-74,13,0,7); fs(c,'#fff',4); });
+    if(cat) drawCat(c,x+40,y-S0/2-6,34,false,t);
+    for(let i=0;i<6;i++){ const a=t*.8+i*Math.PI/3, vx=x+Math.cos(a)*230, vy=y+Math.sin(a)*120; c.save(); c.globalAlpha=.55; drawVirus(c,vx,vy,30,t+i); c.restore(); txt(c,'✕',vx,vy,26,'#ff5a4a',700); }
+    txt(c,'ซูเปอร์แอพ',320,370,20,'#fff',700);
+  }
   else { c.fillStyle='#000'; c.fillRect(0,0,640,400); c.font='16px ui-monospace, monospace'; c.fillStyle='#c8c8c8'; c.textAlign='left'; c.textBaseline='top';
     ['กำลังฟอร์แมตไดรฟ์ C: ...','ลบไฟล์ทั้งหมด 100%','ไม่พบแอพในระบบ'].forEach((l,i)=>c.fillText(l,40,60+i*28)); if(Math.floor(t*2)%2) c.fillRect(40,150,10,18); if(cat) drawCat(c,320,260,50,false,t); }
 }
@@ -2085,7 +2318,7 @@ function renderIntro(){
     ${dlg}
     <div class="taskbar"><button class="b95 startbtn ${MENU?'on':'pulse'}" data-act="startmenu"><i></i>เริ่ม</button>${WARN==='closed'?`<button class="b95" data-act="openwarn" style="padding:3px 10px">คำเตือน</button>`:''}<span class="tray">${new Date().toTimeString().slice(0,5)}</span></div>
   </div>`;
-  paintIcons($('scr-intro')); if(WARN==='new') WARN='shown';
+  paintIcons($('scr-intro')); paintEnds($('scr-intro')); if(WARN==='new') WARN='shown';
   sizeBg(); if(!introRaf) introRaf=requestAnimationFrame(introLoop);
 }
 function dialogHTML(kind){
@@ -2099,7 +2332,7 @@ function dialogHTML(kind){
     <div><canvas data-icon="flash"></canvas><span>หาทางรอดให้เจอ มีมากกว่าหนึ่งทาง</span></div></div></div>
     <div class="foot"><button class="b95 def" data-act="dlgclose">ตกลง</button></div></div></div>`;
   if(kind==='gallery') return `<div class="dlgwrap"><div class="dlg win"><div class="tb"><span class="t">ฉากจบที่พบ ${got.length}/${Object.keys(ENDINGS).length}</span><button class="b95 tbx x" data-act="dlgclose" aria-label="ปิด">×</button></div><div class="body">
-    <div class="gal">${Object.entries(ENDINGS).map(([k,v])=>`<div class="inset ${got.includes(k)?'':'no'}"><i style="${got.includes(k)?`background:${v.win?'#2f8a8a':'#000'}`:''}"></i>${got.includes(k)?v.t:'???'}</div>`).join('')}</div>
+    <div class="gal">${Object.entries(ENDINGS).map(([k,v])=>`<div class="inset ${got.includes(k)?'':'no'}">${got.includes(k)?`<canvas data-end="${k}"></canvas>`:'<i></i>'}${got.includes(k)?v.t:'???'}</div>`).join('')}</div>
     ${best?`<p class="note">ดีที่สุด: รอด ${best.surv} แอพ ใน ${best.days} วัน</p>`:''}</div>
     <div class="foot"><button class="b95 def" data-act="dlgclose">ปิด</button></div></div></div>`;
   if(kind==='iosinstall'){
@@ -2110,7 +2343,7 @@ function dialogHTML(kind){
     ${steps.map((t,i)=>`<div><b style="font-size:22px;text-align:center">${i+1}</b><span>${t}</span></div>`).join('')}</div></div>
     <div class="foot"><button class="b95 def" data-act="dlgclose">ตกลง</button></div></div></div>`; }
   if(kind==='settings') return `<div class="dlgwrap"><div class="dlg win"><div class="tb"><span class="t">ตั้งค่า</span><button class="b95 tbx x" data-act="dlgclose" aria-label="ปิด">×</button></div><div class="body">
-    <button class="chk" data-act="mute"><span class="bx inset">${muted?'':'✓'}</span>เปิดเสียง</button>
+    <button class="chk" data-act="mute"><span class="bx inset">${muted?'':'✓'}</span>เปิดเสียง</button>${CAN_VIB?`<button class="chk" data-act="vib"><span class="bx inset">${vibOn?'✓':''}</span>สั่นเมื่อหยิบของและใกล้หมดเวลา</button>`:''}
     <div class="row"><button class="b95" data-act="fs">เต็มจอ</button><button class="b95" data-act="tutreset">สอนเล่นใหม่อีกรอบ</button></div></div>
     <div class="foot"><button class="b95 def" data-act="dlgclose">ตกลง</button></div></div></div>`;
   return '';
@@ -2143,7 +2376,12 @@ function nightThen(cb,day,sub){
 }
 function saveGame(){ if(S && !S.over) lsSet(LS+'save',S); }
 const SPK=m=>`<svg class="spk" viewBox="0 0 22 22" aria-hidden="true"><path d="M2 8h4l6-5v16l-6-5H2z" fill="#1a1a1a"/>${m?'<path d="M15 8l5 6M20 8l-5 6" stroke="#b3261e" stroke-width="2.4" stroke-linecap="round"/>':'<path d="M15 7.5c1.8 1.4 1.8 5.6 0 7M17.6 4.8c3.2 2.8 3.2 9.6 0 12.4" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>'}</svg>`;
-function updateMute(){ const b=$('mutebtn'); if(b) b.innerHTML=SPK(muted); }
+function updateMute(){ const b=$('mutebtn'); if(b) b.innerHTML=SPK(muted); const v=$('vibbtn'); if(v){ v.hidden=!CAN_VIB; v.innerHTML=VIBI(vibOn); } }
+/* vibration (Android phones); toggle sits next to the sound button */
+let vibOn=lsGet(LS+'vib',true);
+const CAN_VIB = matchMedia('(pointer:coarse)').matches && typeof navigator.vibrate==='function';
+function buzz(p){ if(CAN_VIB && vibOn) try{ navigator.vibrate(p); }catch(e){} }
+const VIBI=on=>`<svg class="spk" viewBox="0 0 22 22" aria-hidden="true"><rect x="7" y="3" width="8" height="16" rx="1.6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><path d="M9.5 16.2h3" stroke="#1a1a1a" stroke-width="1.6"/>${on?'<path d="M4 7.5l-2 2 2 2-2 2M18 7.5l2 2-2 2 2 2" fill="none" stroke="#1a1a1a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M3 3l16 16" stroke="#b3261e" stroke-width="2.6" stroke-linecap="round"/>'}</svg>`;
 
 /* ---------------- install as app (PWA build only) ---------------- */
 let INSTALL_EV=null;
@@ -2182,6 +2420,7 @@ $('stage').addEventListener('click',e=>{
     else if(act==='dlgclose'){ DLG=null; renderIntro(); }
     else if(act==='continue'){ S=lsGet(LS+'save',null); MENU=false; if(S){ diffKey=S.diff; if(!S.log) S.log=[]; if(S.choice===undefined) S.choice=null; bookOpen=true; renderDay(); } else renderIntro(); }
     else if(act==='mute'){ muted=!muted; lsSet(LS+'mute',muted); updateMute(); if(muted) music(null); else { MUS.mode=null; music(phase==='sum'?'day':phase); } if(phase==='intro') renderIntro(); else if(phase==='day') renderDay(true); }
+    else if(act==='vib'){ vibOn=!vibOn; lsSet(LS+'vib',vibOn); buzz(40); updateMute(); if(phase==='intro') renderIntro(); else if(phase==='day') renderDay(true); }
     else if(act==='fs'){ if(fsEl()) exitFS(); else goFS(); }
     else if(act==='install'){ MENU=false; if(INSTALL_EV){ const ev=INSTALL_EV; INSTALL_EV=null; ev.prompt(); (ev.userChoice||Promise.resolve()).then(()=>renderIntro()); renderIntro(); } else { DLG='iosinstall'; renderIntro(); } }
     else if(act==='tutreset'){ lsDel(LS+'tut-scv'); lsDel(LS+'tut-day'); a.textContent='จะสอนใหม่รอบหน้า'; }
