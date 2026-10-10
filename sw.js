@@ -1,5 +1,5 @@
 /* Ctrl+Alt+รอด service worker — เก็บเกมไว้ในเครื่องให้เล่นออฟไลน์ได้ */
-const VERSION = '20261010150900';
+const VERSION = '20261010160218';
 const CACHE = 'caltrod-' + VERSION;
 const FONT_CACHE = 'caltrod-fonts';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './favicon-32.png'];

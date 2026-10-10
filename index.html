@@ -2094,11 +2094,13 @@ function dialogHTML(kind){
     <div class="gal">${Object.entries(ENDINGS).map(([k,v])=>`<div class="inset ${got.includes(k)?'':'no'}"><i style="${got.includes(k)?`background:${v.win?'#2f8a8a':'#000'}`:''}"></i>${got.includes(k)?v.t:'???'}</div>`).join('')}</div>
     ${best?`<p class="note">ดีที่สุด: รอด ${best.surv} แอพ ใน ${best.days} วัน</p>`:''}</div>
     <div class="foot"><button class="b95 def" data-act="dlgclose">ปิด</button></div></div></div>`;
-  if(kind==='iosinstall') return `<div class="dlgwrap"><div class="dlg win"><div class="tb"><span class="t">ติดตั้งบน iPhone / iPad</span><button class="b95 tbx x" data-act="dlgclose" aria-label="ปิด">×</button></div><div class="body"><div class="howto">
-    <div><b style="font-size:22px;text-align:center">1</b><span>เปิดหน้านี้ใน <b>Safari</b></span></div>
-    <div><b style="font-size:22px;text-align:center">2</b><span>กดปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรชี้ขึ้น)</span></div>
-    <div><b style="font-size:22px;text-align:center">3</b><span>เลือก <b>เพิ่มไปยังหน้าจอโฮม</b> แล้วกด <b>เพิ่ม</b></span></div></div></div>
-    <div class="foot"><button class="b95 def" data-act="dlgclose">ตกลง</button></div></div></div>`;
+  if(kind==='iosinstall'){
+    const steps = INAPP ? ['คุณเปิดเกมอยู่ในเบราว์เซอร์ของแอพอื่น (เช่น LINE หรือ Facebook) ซึ่งติดตั้งไม่ได้','กดเมนู <b>⋮</b> หรือ <b>แชร์</b> แล้วเลือก <b>เปิดในเบราว์เซอร์</b> (Chrome หรือ Safari)','เปิดเกมอีกครั้ง แล้วกด เริ่ม → ติดตั้งเป็นแอพ']
+      : IOS ? ['เปิดหน้านี้ใน <b>Safari</b>','กดปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรชี้ขึ้น)','เลือก <b>เพิ่มไปยังหน้าจอโฮม</b> แล้วกด <b>เพิ่ม</b>']
+      : ['เปิดหน้านี้ใน <b>Chrome</b> (ไม่ใช่โหมดไม่ระบุตัวตน)','กดเมนู <b>⋮</b> ที่มุมขวาบนของเบราว์เซอร์','เลือก <b>ติดตั้งแอป</b> หรือ <b>เพิ่มลงในหน้าจอหลัก</b>'];
+    return `<div class="dlgwrap"><div class="dlg win"><div class="tb"><span class="t">ติดตั้งเป็นแอพ</span><button class="b95 tbx x" data-act="dlgclose" aria-label="ปิด">×</button></div><div class="body"><div class="howto">
+    ${steps.map((t,i)=>`<div><b style="font-size:22px;text-align:center">${i+1}</b><span>${t}</span></div>`).join('')}</div></div>
+    <div class="foot"><button class="b95 def" data-act="dlgclose">ตกลง</button></div></div></div>`; }
   if(kind==='settings') return `<div class="dlgwrap"><div class="dlg win"><div class="tb"><span class="t">ตั้งค่า</span><button class="b95 tbx x" data-act="dlgclose" aria-label="ปิด">×</button></div><div class="body">
     <button class="chk" data-act="mute"><span class="bx inset">${muted?'':'✓'}</span>เปิดเสียง</button>
     <div class="row"><button class="b95" data-act="fs">เต็มจอ</button><button class="b95" data-act="tutreset">สอนเล่นใหม่อีกรอบ</button></div></div>
@@ -2139,7 +2141,8 @@ function updateMute(){ const b=$('mutebtn'); if(b) b.innerHTML=SPK(muted); }
 let INSTALL_EV=null;
 const STANDALONE = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone===true;
 const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-function canInstall(){ return !!window.PWA_MODE && !STANDALONE() && (!!INSTALL_EV || IOS); }
+const INAPP = /Line\/|FBAN|FBAV|Instagram|MicroMessenger|TikTok|musical_ly|; wv\)/i.test(navigator.userAgent);
+function canInstall(){ return !!window.PWA_MODE && !STANDALONE(); }
 addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); INSTALL_EV=e; if(phase==='intro') renderIntro(); });
 addEventListener('appinstalled',()=>{ INSTALL_EV=null; if(phase==='intro') renderIntro(); });
 
