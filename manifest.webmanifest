@@ -1,0 +1,20 @@
+{
+  "name": "Ctrl+Alt+รอด",
+  "short_name": "Ctrl+Alt+รอด",
+  "description": "แอพในคอมต้องหนีไวรัสเข้าแฟลชไดรฟ์ให้ทันใน 60 วินาที แล้วเอาชีวิตรอดให้ได้",
+  "lang": "th",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#2f8a8a",
+  "theme_color": "#1c2f8a",
+  "categories": ["games"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
