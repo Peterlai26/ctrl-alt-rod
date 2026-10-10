@@ -187,6 +187,8 @@ h1,h2,h3{margin:0;text-wrap:balance} p{margin:0}
 .dayg.closed .wiz{display:none}
 .roomwin{min-width:0}
 .roomwin .tb .hud{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:500}
+@media (max-width:960px){ .dayg:not(.closed) .roomwin .tb .tl{display:none} }
+@media (max-width:760px){ .dayg:not(.closed) .roomwin .tb .hl{display:none} .dayg:not(.closed) .roomwin .tb .infb{width:44px} }
 .infb{width:70px;height:10px;background:#0b2a12;border:1px solid #fff;display:inline-block;vertical-align:middle}
 .infb span{display:block;height:100%;background:var(--virus)}
 .roombody{flex:1;min-height:0;overflow:hidden;position:relative;display:grid;place-items:center;padding:4px;background:#0f2424}
@@ -2068,7 +2070,7 @@ function applyBook(){ $('dayg').classList.toggle('closed',!bookOpen); $('openboo
 function renderDay(keepPage){
   show('day');
   const pct=infPct(S.day);
-  $('roomtb').innerHTML=`<span class="t">แฟลชไดรฟ์ (E:) — วันที่ ${S.day}</span><span class="hud">ไวรัสข้างนอก <span class="infb"><span style="width:${pct}%"></span></span> ${pct}%</span>${CAN_VIB?`<button class="b95 tbx" data-act="vib" aria-label="เปิดปิดการสั่น">${VIBI(vibOn)}</button>`:''}<button class="b95 tbx" data-act="mute" aria-label="เปิดปิดเสียง">${SPK(muted)}</button>`;
+  $('roomtb').innerHTML=`<span class="t"><span class="tl">แฟลชไดรฟ์ (E:) — </span>วันที่ ${S.day}</span><span class="hud"><span class="hl">ไวรัสข้างนอก</span> <span class="infb"><span style="width:${pct}%"></span></span> ${pct}%</span>${CAN_VIB?`<button class="b95 tbx" data-act="vib" aria-label="เปิดปิดการสั่น">${VIBI(vibOn)}</button>`:''}<button class="b95 tbx" data-act="mute" aria-label="เปิดปิดเสียง">${SPK(muted)}</button>`;
   const rs=$('rescue'); if(S.rescueDay&&S.rescueDay>=S.day){ rs.hidden=false; rs.textContent=`ช่างนัดเข้ามาคืนวันที่ ${S.rescueDay}`; } else rs.hidden=true;
   const pages=pagesFor(); if(S.page>=pages.length) S.page=0;
   applyBook();
