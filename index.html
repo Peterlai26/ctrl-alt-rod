@@ -1165,26 +1165,71 @@ function D(){ return DIFF[S ? S.diff : diffKey]; }
 let AC=null;
 function audioInit(){ if(AC){ if(AC.state==='suspended') AC.resume(); return; } try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } }
 function tone(f,dur,type,vol,slide){ if(!AC||muted) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type=type||'square'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol||.06,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+.05); }
-function noise(dur,vol,freq){ if(!AC||muted) return; const t=AC.currentTime, n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n); const s=AC.createBufferSource(); s.buffer=b; const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq||900; const g=AC.createGain(); g.gain.value=vol||.06; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); }
+function noise(dur,vol,freq,freq2,type){ if(!AC||muted) return; const t=AC.currentTime, n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n); const s=AC.createBufferSource(); s.buffer=b; const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.setValueAtTime(freq||900,t); if(freq2) f.frequency.exponentialRampToValueAtTime(freq2,t+dur); const g=AC.createGain(); g.gain.value=vol||.06; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); }
+function wob(f,dur,vol,rate,depth){ if(!AC||muted) return; const t=AC.currentTime, o=AC.createOscillator(), l=AC.createOscillator(), lg=AC.createGain(), g=AC.createGain(); o.type='sine'; o.frequency.value=f; l.frequency.value=rate; lg.gain.value=depth; l.connect(lg); lg.connect(o.frequency); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.08); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); l.start(t); o.stop(t+dur+.05); l.stop(t+dur+.05); }
+const at=(ms,fn)=>setTimeout(fn,ms);
+const seq=(notes,step,type,vol)=>notes.forEach((f,i)=>f&&at(i*step,()=>tone(f,step/1000*1.1,type||'square',vol||.05)));
 const SFX = {
   pick(){ tone(880,.06,'square',.05); setTimeout(()=>tone(1320,.08,'square',.05),55); },
-  drop(){ tone(523,.08,'square',.05); setTimeout(()=>tone(659,.08,'square',.05),70); setTimeout(()=>tone(784,.12,'square',.05),140); },
-  search(){ for(let i=0;i<5;i++) setTimeout(()=>noise(.05,.05,2400),i*90); },
+  drop(){ tone(392,.12,'triangle',.08); at(110,()=>tone(784,.25,'triangle',.08)); },
+  search(){ for(let i=0;i<7;i++) at(i*70,()=>noise(.05,.07,1400+i*500,null,'bandpass')); },
   open(){ tone(660,.05,'square',.05); setTimeout(()=>tone(990,.07,'square',.05),60); },
   tick(){ tone(1500,.03,'square',.03); },
   count(){ tone(440,.14,'square',.05); },
   go(){ tone(880,.3,'square',.06); },
   siren(){ for(let i=0;i<4;i++) setTimeout(()=>tone(i%2?620:880,.18,'square',.04),i*200); },
-  full(){ tone(110,.15,'square',.06); },
+  full(){ tone(330,.18,'square',.05); tone(415,.18,'square',.03); },
   page(){ tone(1200,.03,'square',.03); setTimeout(()=>tone(900,.03,'square',.03),40); },
   good(){ tone(523,.1,'square',.05); setTimeout(()=>tone(784,.16,'square',.05),100); },
   bad(){ tone(196,.35,'sawtooth',.04,98); },
   night(){ tone(330,.12,'square',.04); setTimeout(()=>tone(220,.12,'square',.04),140); setTimeout(()=>tone(110,.4,'square',.04),280); },
-  boot(){ tone(523,.1,'square',.04); setTimeout(()=>tone(784,.1,'square',.04),120); setTimeout(()=>tone(1046,.25,'square',.04),240); },
+  boot(){ wob(120,.8,.035,30,8); at(150,()=>noise(.5,.025,1800,null,'bandpass')); at(650,()=>seq([523,784,1046],120,'square',.04)); },
   glitch(){ noise(.25,.06,4000); },
   step(){ tone(160,.03,'square',.015); },
-  click(){ tone(1800,.02,'square',.03); }
+  click(){ tone(1800,.02,'square',.03); },
+  /* scavenge */
+  virus(){ noise(.3,.09,5000,600,'bandpass'); tone(220,.35,'sawtooth',.05,70); },
+  beat(){ tone(70,.12,'sine',.18); at(110,()=>tone(60,.1,'sine',.12)); },
+  nid(){ seq([1046,1318],70); },
+  praew(){ noise(.04,.12,6000,null,'highpass'); at(70,()=>noise(.06,.1,3000,null,'highpass')); },
+  ton(){ tone(988,.07,'square',.05); at(70,()=>tone(1318,.22,'square',.05)); },
+  cat(){ tone(700,.25,'triangle',.08,1100); at(180,()=>tone(1100,.2,'triangle',.06,600)); },
+  unplug(){ tone(784,.12,'triangle',.08); at(110,()=>tone(392,.3,'triangle',.08)); at(380,()=>noise(.5,.08,3000,300)); },
+  /* day */
+  door(){ wob(260,.7,.06,9,40); at(80,()=>noise(.6,.03,700,300,'bandpass')); at(700,()=>seq([523,784,1046],100,'triangle',.07)); },
+  leave(){ [0,180,360].forEach(ms=>at(ms,()=>tone(140,.05,'square',.04))); at(560,()=>{ noise(.15,.14,400); tone(80,.18,'sine',.15); }); },
+  infect(){ for(let i=0;i<6;i++) at(i*60,()=>tone(200+Math.random()*900,.05,'square',.04)); at(380,()=>tone(150,.3,'sawtooth',.04,90)); },
+  erase(){ noise(.35,.12,1200,200); at(380,()=>tone(110,.6,'triangle',.07,55)); },
+  ram(){ noise(.05,.08,2500); at(60,()=>tone(660,.06,'square',.04)); },
+  charge(){ tone(400,.25,'sine',.08,1600); },
+  scan(){ wob(900,.6,.05,6,300); at(650,()=>seq([784,1046,1318],80,'triangle',.07)); },
+  morph(){ seq([523,659,784,1046,784,1046,1318,1568],55,'square',.045); at(470,()=>tone(1568,.3,'triangle',.05,400)); },
+  unmorph(){ tone(1200,.18,'sine',.08,300); },
+  /* event stingers */
+  threat(){ for(let i=0;i<3;i++) at(i*170,()=>tone(i%2?600:850,.16,'sawtooth',.04)); },
+  knockknock(){ [0,170,520].forEach(ms=>at(ms,()=>{ noise(.06,.18,900); tone(180,.06,'sine',.12); })); },
+  weird(){ wob(440,1.1,.06,5,60); at(250,()=>wob(660,.9,.04,7,90)); },
+  ufo(){ wob(700,1.4,.07,3,350); },
+  bsod(){ noise(.12,.12,5000); at(100,()=>tone(1000,.7,'square',.05)); },
+  dino(){ tone(300,.18,'square',.05,900); at(200,()=>tone(900,.15,'square',.04,300)); },
+  notify(){ tone(1318,.15,'triangle',.08); at(150,()=>tone(988,.3,'triangle',.08)); },
+  karaoke(){ seq([659,659,784,659,880,784,0,659,587,523],120,'square',.045); },
+  tech(){ noise(1.5,.06,300,1600,'bandpass'); at(1300,()=>tone(880,.2,'square',.05)); },
+  /* endings */
+  win(){ seq([523,659,784,1046,0,784,1046],110,'square',.05); },
+  shutdown(){ seq([784,659,523,392],180,'triangle',.07); at(760,()=>tone(196,.9,'triangle',.07,60)); },
+  merge(){ tone(110,1.2,'sawtooth',.04,880); at(1150,()=>{ noise(.5,.12,6000,800); seq([1046,1318,1568,2093],90,'square',.05); }); }
 };
+const EV_SND = {};
+[['threat','thief2 croc1 croc2 snake thief mosq miner formatScare window wire update2 rain smell lag'],
+ ['knockknock','aunt1 aunt2 aunt3 lung1 lung2 lung3 knock dog nidGive headman printer'],
+ ['weird','morph8 zipper ghost giant flip swapBody mirror mirror2 fuse1 fuse2 slime slime2 egg egg2 timewarp clippy recycle catGone aibot fridge'],
+ ['ufo','ufo'],['bsod','bsod'],['dino','dino dino2'],['karaoke','karaoke'],['tech','rescue'],
+ ['notify','radioNews radioBroken power megaphone evacNews relief merit drone yt1 yt2 yt3 praewPhone update emoji catBig catfish']
+].forEach(([k,ids])=>ids.split(' ').forEach(id=>EV_SND[id]=k));
+/* sounds that wait for the morning screen after a reboot */
+let SNDQ=[];
+function playQueue(){ const q=[...new Set(SNDQ)]; SNDQ=[]; q.forEach((n,i)=>at(1000+i*1100,()=>sfx(n))); }
 function sfx(n){ try{ SFX[n] && SFX[n](); }catch(e){} }
 const MUS={mode:null,timer:0,step:0};
 const SCALE=[261.6,293.7,329.6,392,440,523.3];
@@ -1541,9 +1586,12 @@ function loop(ts){
     if(sec!==SC.lastSec){ SC.lastSec=sec; if(sec<=10 && sec>0){ sfx('tick'); buzz(15); } }
     if(SC.busy>0){ SC.busy-=dt; if(SC.busy<=0) finishBusy(); }
     else { const v=inputVec(); if(v){ const cx=Math.floor(SC.pos.x), cy=Math.floor(SC.pos.y), slow=infected(cx,cy);
-        if(slow && !SC.slowWarn){ SC.slowWarn=true; hint('พื้นที่ติดไวรัส เดินช้าลง!',true); sfx('glitch'); buzz(70); }
+        if(slow && !SC.slowWarn){ SC.slowWarn=true; hint('พื้นที่ติดไวรัส เดินช้าลง!',true); buzz(70); }
+        if(slow && !SC.wasInf && SC.anim-(SC.virT||-9)>1){ SC.virT=SC.anim; sfx('virus'); } SC.wasInf=slow;
         tryMove(v.du*SPEED*(slow?.5:1)*dt, v.dv*SPEED*(slow?.5:1)*dt); SC.moving=true; SC.stepT-=dt; if(SC.stepT<=0){ SC.stepT=.26; sfx('step'); } } }
     if(STAIR.has(key(Math.floor(SC.pos.x),Math.floor(SC.pos.y))) && SC.bag.length) deposit();
+    { const px=Math.floor(SC.pos.x), py=Math.floor(SC.pos.y); let dmin=9; if(!infected(px,py)) for(let y=py-2;y<=py+2;y++) for(let x=px-2;x<=px+2;x++) if(infected(x,y)) dmin=Math.min(dmin,Math.hypot(x-px,y-py));
+      if(dmin<=2.3){ SC.beatT=(SC.beatT||0)-dt; if(SC.beatT<=0){ SC.beatT=dmin<1.5?.45:.85; sfx('beat'); } } }
     SC.near=findNear(); updateAct();
     if(rem<=0){ drawMap(); endScavenge(); return; }
   }
@@ -1562,7 +1610,7 @@ function screenOf(u,v,z){ const I=camIso(), q=I.P(u,v,z), r=$('mapc').getBoundin
 function take(id,at){
   const d=DEF[id];
   if(bagUsed()+d.s>CAP){ hint(`ในมือเต็มแล้ว ${d.n}ใช้ ${d.s} ช่อง ไปที่แฟลชไดรฟ์ก่อน`,true); sfx('full'); buzz([30,40,30]); return false; }
-  SC.bag.push(id); SC.busy=.18; SC.busyBox=null; sfx('pick'); buzz(18);
+  SC.bag.push(id); SC.busy=.18; SC.busyBox=null; sfx(d.k==='person'||d.k==='cat'?id:'pick'); buzz(18);
   hint(d.k==='person'?`${d.n}ตามมาแล้ว`:d.k==='cat'?'จับเคอร์เซอร์ไว้แล้ว มันดิ้นนิดหน่อย':`หยิบ${d.n}แล้ว`);
   drawBag(); if(at) fly(id,at[0],at[1]);
   return true;
@@ -1607,7 +1655,7 @@ function drawBag(){
 }
 function drawDep(){ $('depn').textContent=SC.dep.length; }
 function endScavenge(){
-  SC.ended=true; cancelAnimationFrame(raf); sfx('glitch'); buzz([120,60,120]); KEYS.clear(); JOY.x=JOY.y=0;
+  SC.ended=true; cancelAnimationFrame(raf); sfx('unplug'); buzz([120,60,120]); KEYS.clear(); JOY.x=JOY.y=0;
   const lost=SC.bag.slice(), dep=SC.dep.slice();
   const missing=['nid','praew','ton'].filter(p=>!dep.includes(p));
   S=newGame(dep,lost,missing);
@@ -1813,20 +1861,21 @@ function endDay(){
     if(r.w && S.water>0){ S.water--; m.thirst=0; } else if(fm!=='ghost' && fm!=='zip') m.thirst++;
     if(fm==='zip'){ m.stress=false; m.stressDays=0; }
     if(m.sick) m.sickDays++;
-    if(m.stress){ m.stressDays++; if(m.stressDays>=4){ m.stress=false; m.stressDays=0; sick(id); rep.push({t:`${nm(id)}ค้างจนแอบออกไปเดินในเขตติดเชื้อทั้งคืน แล้วติดไวรัสกลับมา`,c:'bad'}); } }
+    if(m.stress){ m.stressDays++; if(m.stressDays>=4){ m.stress=false; m.stressDays=0; sick(id); SNDQ.push('infect'); rep.push({t:`${nm(id)}ค้างจนแอบออกไปเดินในเขตติดเชื้อทั้งคืน แล้วติดไวรัสกลับมา`,c:'bad'}); } }
     let why=null;
     if(m.thirst>=dd.thirst) why='แบตหมด'; else if(m.hunger>=dd.hunger) why='แรมไม่พอ'; else if(m.sick && m.sickDays>=dd.sickDie) why='ไวรัสที่ไม่ได้สแกน';
-    if(why){ m.alive=false; S.dead.push(id); rep.push({t:`${nm(id)}แครชเพราะ${why} และถูกลบหายไปในคืนนั้น`,c:'bad',log:1}); }
+    if(why){ m.alive=false; S.dead.push(id); SNDQ.push('erase'); rep.push({t:`${nm(id)}แครชเพราะ${why} และถูกลบหายไปในคืนนั้น`,c:'bad',log:1}); }
   });
   Object.keys(S.m).forEach(id=>{ const m=S.m[id]; if(!m.form) return;
     if(!m.alive){ m.form=null; m.look=null; return; }
     if(m.form==='alien' && !S.rescueDay && m.here && !m.away && Math.random()<.3*D().luck){ S.rescueDay=S.day+1+rand(2,4); rep.push({t:`หนวดเสาอากาศของ${nm(id)}จับสัญญาณได้ว่า ช่างไอทีจะเข้ามาคืนวันที่ ${S.rescueDay}`,c:'good',log:1}); }
     m.formDays=(m.formDays||1)-1;
-    if(m.formDays<=0){ const f=m.form; m.form=null; m.look=null; rep.push({t:`${nm(id)}${f==='zip'?'แตกไฟล์ออกมา':f==='ghost'?'กลับมามองเห็นได้':'กลับร่างเดิม'}แล้ว`,log:1}); } });
+    if(m.formDays<=0){ SNDQ.push('unmorph'); const f=m.form; m.form=null; m.look=null; rep.push({t:`${nm(id)}${f==='zip'?'แตกไฟล์ออกมา':f==='ghost'?'กลับมามองเห็นได้':'กลับร่างเดิม'}แล้ว`,log:1}); } });
   const d=evDef();
   if(d && !d.auto && d.ch && S.choice!=null){
-    const c=d.ch[S.choice], f0=S.food, w0=S.water;
+    const c=d.ch[S.choice], f0=S.food, w0=S.water, ids0=Object.keys(S.m), snap=id=>({s:S.m[id].sick,f:S.m[id].form||null}), b0=ids0.map(snap);
     const res = (c.ok && !c.ok()) ? `สุดท้ายทำไม่ได้ เพราะ${c.need}` : c.run(S.ev);
+    ids0.forEach((id,i)=>{ const b=b0[i], a=snap(id); if(a.s && !b.s) SNDQ.push('infect'); if(a.f && a.f!==b.f) SNDQ.push('morph'); });
     S.evResult=res;
     const cls = S.food<f0||S.water<w0 ? 'bad' : (S.food>f0||S.water>w0) ? 'good' : '';
     rep.unshift({t:`[เมื่อวาน: ${c.l}] ${res}`,c:cls,log:1});
@@ -1837,7 +1886,7 @@ function endDay(){
       m.away=true; const dest=pickDest();
       S.exp={id:p.id,dest:dest.id,days:rand(dest.days[0],dest.days[1]),gear:p.gear};
       if(p.gear) S.tools[p.gear]=false; if(S.stat) S.stat.exp++;
-      rep.push({t:`${nm(p.id)}${p.gear?`ใช้${DEF[p.gear].n}`:'มือเปล่า'}ออกไปข้างนอกตั้งแต่ตีห้า ไม่รู้จะไปเจออะไร`}); } }
+      SNDQ.push('leave'); rep.push({t:`${nm(p.id)}${p.gear?`ใช้${DEF[p.gear].n}`:'มือเปล่า'}ออกไปข้างนอกตั้งแต่ตีห้า ไม่รู้จะไปเจออะไร`}); } }
   S.plan=null;
   if(S.catAway>0){ S.catAway--; if(S.catAway===0) catReturn(rep); }
   S.rat={};
@@ -1859,7 +1908,7 @@ function endDay(){
   if(!living.length){ nightThen(()=>finish('dead'),prevDay,'ไม่พบแอพในไดรฟ์'); return; }
   if(S.day>=dd.recede){ nightThen(()=>finish('receded'),prevDay,'สแกนไวรัสเสร็จสมบูรณ์'); return; }
   genEvent(); saveGame();
-  nightThen(()=>{ bookOpen=true; renderDay(); },prevDay, infPct(S.day)<infPct(prevDay)?'ระดับไวรัสลดลง':'ระดับไวรัสยังเพิ่มขึ้น');
+  nightThen(()=>{ bookOpen=true; renderDay(); playQueue(); },prevDay, infPct(S.day)<infPct(prevDay)?'ระดับไวรัสลดลง':'ระดับไวรัสยังเพิ่มขึ้น');
 }
 function pickDest(){ const w={mart:3,temple:2.2,house:3,center:1.2}; const tot=DEST.reduce((a,d)=>a+w[d.id],0); let r=Math.random()*tot; for(const d of DEST){ r-=w[d.id]; if(r<=0) return d; } return DEST[0]; }
 function resolveExp(rep){
@@ -1867,6 +1916,7 @@ function resolveExp(rep){
   let p=1-dest.risk + ({ring:.15,raft:.18,boat:.25}[e.gear]||0) + dd.exp + (e.id==='ek'?.1:0) - (PEOPLE[e.id].kid?.1:0) - (S.crocUntil>=S.day?.2:0);
   p=clamp(p,.1,.95);
   const back = () => { if(e.gear) S.tools[e.gear]=true; };
+  SNDQ.push('door');
   if(Math.random()<p){
     m.away=false; back();
     const f=Math.round((rand(dest.food[0],dest.food[1])+(e.id==='nid'?1:0))*(dd.bad>1.2?.75:dd.bad<.8?1.25:1)), w=rand(dest.water[0],dest.water[1]);
@@ -1883,7 +1933,7 @@ function resolveExp(rep){
     if(e.gear){ if(Math.random()<.5) t+=` ${DEF[e.gear].n}หายระหว่างทาง`; else back(); }
     rep.push({t,c:'bad',log:1});
   } else {
-    m.alive=false; m.away=false; m.lost=true; S.dead.push(e.id);
+    SNDQ.splice(SNDQ.lastIndexOf('door'),1); SNDQ.push('erase'); m.alive=false; m.away=false; m.lost=true; S.dead.push(e.id);
     rep.push({t:`${nm(e.id)}ไม่กลับมา มีคนบอกว่าเห็นถูกย้ายไปโฟลเดอร์แบ็กอัป หวังว่าจะเป็นอย่างนั้น`,c:'bad',log:1});
   }
 }
@@ -2160,6 +2210,7 @@ function pgSleep(){
   if(S.plan) li.push(`${nm(S.plan.id)}จะออกไปหาของตอนตีห้า${S.plan.gear?` พร้อม${DEF[S.plan.gear].n}`:''}`);
   return `<h2>พร้อมรีบูต</h2><p>สรุปการตั้งค่าวันนี้</p><ul class="sleep">${li.map(x=>`<li>${x}</li>`).join('')||'<li>ไม่มีอะไรต้องทำ</li>'}</ul><p class="note">กด &lt; ย้อน เพื่อแก้ไขก่อนรีบูตได้</p>`;
 }
+let STING='';
 function renderBook(anim){
   const prevPage=$('wizpage'), keep=!anim && prevPage ? prevPage.scrollTop : 0;
   const pages=pagesFor(), cur=pages[S.page], last=S.page===pages.length-1;
@@ -2175,6 +2226,7 @@ function renderBook(anim){
       ${last?`<button class="b95 def" data-act="endday">รีบูตเครื่อง</button>`:`<button class="b95 def" data-nav="1" ${blockNext?'disabled':''}>ถัดไป &gt;</button>`}</div>`;
   paintIcons($('wiz'));
   if(keep) $('wizpage').scrollTop=keep;
+  if(cur==='event' && S.ev && EV_SND[S.ev.id]){ const k=S.day+':'+S.ev.id; if(STING!==k){ STING=k; at(250,()=>sfx(EV_SND[S.ev.id])); } }
 }
 
 /* ---------- drag to feed ---------- */
@@ -2188,7 +2240,7 @@ function dragEnd(e){
   focusId=null;
   if(!id || !has(id)){ renderBook(false); return; }
   const {fL,wL}=rationLeft(), r=S.rat[id]||(S.rat[id]={});
-  if(!r[kind] && (kind==='f'?fL:wL)>0){ r[kind]=true; sfx('pick'); BUB={id,text:kind==='w'?'ชาร์จแล้ว ขอบคุณ':'แรมมาแล้ว ลื่นเลย',t0:performance.now()/1000}; }
+  if(!r[kind] && (kind==='f'?fL:wL)>0){ r[kind]=true; sfx(kind==='f'?'ram':'charge'); BUB={id,text:kind==='w'?'ชาร์จแล้ว ขอบคุณ':'แรมมาแล้ว ลื่นเลย',t0:performance.now()/1000}; }
   else sfx('full');
   renderBook(false);
 }
@@ -2234,7 +2286,7 @@ function finish(kind){
   </div></div>`;
   END={kind,surv,cat};
   cancelAnimationFrame(endRaf); endRaf=requestAnimationFrame(endLoop);
-  sfx(ENDINGS[kind].win?'good':'bad'); buzz(ENDINGS[kind].win?[40,40,40,40,80]:300);
+  sfx(kind==='merge'?'merge':ENDINGS[kind].win?'win':'shutdown'); buzz(ENDINGS[kind].win?[40,40,40,40,80]:300);
 }
 function endLoop(ts){ if(phase!=='end'){ endRaf=0; return; } if(ts-endLast>45){ endLast=ts; drawEnd(ts/1000); } endRaf=requestAnimationFrame(endLoop); }
 function drawEnd(t){
@@ -2441,13 +2493,13 @@ $('stage').addEventListener('click',e=>{
   const t=e.target;
   const nv=t.closest('[data-nav]'); if(nv){ const pages=pagesFor(); if(+nv.dataset.nav>0 && pages[S.page]==='event' && evPending()) return; NOTE=''; focusId=null; S.page=clamp(S.page+ +nv.dataset.nav,0,pages.length-1); sfx('page'); renderBook(true); return; }
   const ch=t.closest('[data-ch]'); if(ch){ NOTE=''; chooseEvent(+ch.dataset.ch); return; }
-  const rt=t.closest('[data-rat]'); if(rt){ const id=rt.dataset.id, r=S.rat[id]||(S.rat[id]={}); r[rt.dataset.rat]=!r[rt.dataset.rat]; sfx('click'); renderBook(false); return; }
+  const rt=t.closest('[data-rat]'); if(rt){ const id=rt.dataset.id, r=S.rat[id]||(S.rat[id]={}); r[rt.dataset.rat]=!r[rt.dataset.rat]; sfx(r[rt.dataset.rat]?(rt.dataset.rat==='f'?'ram':'charge'):'click'); renderBook(false); return; }
   const qa=t.closest('[data-qall]'); if(qa){ const k=qa.dataset.qall;
     if(k==='x'){ S.rat={}; }
     else { let left = k==='f' ? S.food : S.water; Object.values(S.rat).forEach(r=>{ if(r[k]) left--; });
       here().forEach(id=>{ const r=S.rat[id]||(S.rat[id]={}); if(!r[k] && left>0){ r[k]=true; left--; } }); }
     sfx('click'); renderBook(false); return; }
-  const md=t.closest('[data-med]'); if(md){ const id=md.dataset.med; if(S.tools.med>0){ S.tools.med--; S.m[id].sick=false; S.m[id].sickDays=0; sfx('good'); BUB={id,text:'สแกนแล้ว หายแล้ว',t0:performance.now()/1000}; } renderBook(false); return; }
+  const md=t.closest('[data-med]'); if(md){ const id=md.dataset.med; if(S.tools.med>0){ S.tools.med--; S.m[id].sick=false; S.m[id].sickDays=0; sfx('scan'); BUB={id,text:'สแกนแล้ว หายแล้ว',t0:performance.now()/1000}; } renderBook(false); return; }
   const pw=t.closest('[data-pw]'); if(pw){ const id=pw.dataset.pw; if(S.plan&&S.plan.id===id) S.plan=null; else S.plan={id, gear:S.plan?S.plan.gear:(['boat','raft','ring'].find(g=>S.tools[g])||null)}; sfx('click'); renderBook(false); return; }
   const gr=t.closest('[data-gear]'); if(gr && S.plan){ S.plan.gear=gr.dataset.gear||null; sfx('click'); renderBook(false); return; }
 });

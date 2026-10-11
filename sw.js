@@ -1,5 +1,5 @@
 /* Ctrl+Alt+รอด service worker — เก็บเกมไว้ในเครื่องให้เล่นออฟไลน์ได้ */
-const VERSION = '20261010223000';
+const VERSION = '20261011090000';
 const CACHE = 'caltrod-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './favicon-32.png',
   './fonts/anuphan-thai.woff2', './fonts/anuphan-latin.woff2', './fonts/chakrapetch-500-thai.woff2', './fonts/chakrapetch-500-latin.woff2', './fonts/chakrapetch-600-thai.woff2', './fonts/chakrapetch-600-latin.woff2', './fonts/chakrapetch-700-thai.woff2', './fonts/chakrapetch-700-latin.woff2'];
