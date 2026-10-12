@@ -1164,9 +1164,9 @@ function D(){ return DIFF[S ? S.diff : diffKey]; }
 /* ---------------- audio + music (8-bit) ---------------- */
 let AC=null;
 function audioInit(){ if(AC){ if(AC.state==='suspended') AC.resume(); return; } try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } }
-function tone(f,dur,type,vol,slide){ if(!AC||muted) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type=type||'square'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol||.06,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+.05); }
-function noise(dur,vol,freq,freq2,type){ if(!AC||muted) return; const t=AC.currentTime, n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n); const s=AC.createBufferSource(); s.buffer=b; const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.setValueAtTime(freq||900,t); if(freq2) f.frequency.exponentialRampToValueAtTime(freq2,t+dur); const g=AC.createGain(); g.gain.value=vol||.06; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); }
-function wob(f,dur,vol,rate,depth){ if(!AC||muted) return; const t=AC.currentTime, o=AC.createOscillator(), l=AC.createOscillator(), lg=AC.createGain(), g=AC.createGain(); o.type='sine'; o.frequency.value=f; l.frequency.value=rate; lg.gain.value=depth; l.connect(lg); lg.connect(o.frequency); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.08); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); l.start(t); o.stop(t+dur+.05); l.stop(t+dur+.05); }
+function tone(f,dur,type,vol,slide){ if(!AC||muted||document.hidden) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type=type||'square'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol||.06,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+.05); }
+function noise(dur,vol,freq,freq2,type){ if(!AC||muted||document.hidden) return; const t=AC.currentTime, n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n); const s=AC.createBufferSource(); s.buffer=b; const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.setValueAtTime(freq||900,t); if(freq2) f.frequency.exponentialRampToValueAtTime(freq2,t+dur); const g=AC.createGain(); g.gain.value=vol||.06; s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); }
+function wob(f,dur,vol,rate,depth){ if(!AC||muted||document.hidden) return; const t=AC.currentTime, o=AC.createOscillator(), l=AC.createOscillator(), lg=AC.createGain(), g=AC.createGain(); o.type='sine'; o.frequency.value=f; l.frequency.value=rate; lg.gain.value=depth; l.connect(lg); lg.connect(o.frequency); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.08); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g); g.connect(AC.destination); o.start(t); l.start(t); o.stop(t+dur+.05); l.stop(t+dur+.05); }
 const at=(ms,fn)=>setTimeout(fn,ms);
 const seq=(notes,step,type,vol)=>notes.forEach((f,i)=>f&&at(i*step,()=>tone(f,step/1000*1.1,type||'square',vol||.05)));
 const SFX = {
@@ -1241,6 +1241,14 @@ function music(mode){
   else if(mode==='end') MUS.timer=setInterval(()=>{ const s=MUS.step++; tone([523.3,659.3,784,1046.5][s%4],.3,'square',.025); },400);
 }
 
+/* stop all sound while the game is in the background (app switched, screen off, tab hidden) */
+let MUS_BG=null;
+function bgAudio(){
+  if(document.hidden){ if(MUS.mode) MUS_BG=MUS.mode; music(null); try{ AC && AC.suspend(); }catch(e){} }
+  else { try{ AC && AC.resume(); }catch(e){} if(MUS_BG && !muted) music(MUS_BG); MUS_BG=null; }
+}
+document.addEventListener('visibilitychange',bgAudio);
+addEventListener('pagehide',()=>{ music(null); try{ AC && AC.suspend(); }catch(e){} });
 /* ---------------- screens ---------------- */
 function show(name){
   ['intro','scv','sum','day','end'].forEach(s=>{ $('scr-'+s).hidden = s!==name; }); phase=name;
